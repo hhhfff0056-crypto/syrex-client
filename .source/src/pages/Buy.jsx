@@ -36,7 +36,7 @@ const Buy = () => {
             <div className="container">
                 <header className="buy-nav">
                     <div className="buy-breadcrumb">
-                        <span>Rich Client</span>
+                        <span>Syrex Client</span>
                         <span className="sep">•</span>
                         <span className="active">{product.name}</span>
                     </div>
@@ -48,7 +48,7 @@ const Buy = () => {
                             <div className="product-visual">
                                 <div className="visual-inner">
                                     <Sparkles className="visual-icon" size={44} />
-                                    <div className="visual-text">RICH CLIENT</div>
+                                    <div className="visual-text">SYREX CLIENT</div>
                                     <div className="visual-glow"></div>
                                 </div>
                             </div>
@@ -66,7 +66,7 @@ const Buy = () => {
                             <div className="price-row">
                                 <div>
                                     <span className="label-mini">Checkout</span>
-                                    <div className="brand-name">Rich Client</div>
+                                    <div className="brand-name">Syrex Client</div>
                                 </div>
                                 <div className={`price-display ${discountedPrice ? 'has-discount' : ''}`}>
                                     <span className="price-label">Total</span>

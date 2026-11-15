@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import logo from '../assets/images/logo/richlogo.png';
+import logo from '../assets/images/logo/syrex-logo.png';
 import './Features.css';
 
 const Features = () => {
@@ -19,7 +19,7 @@ const Features = () => {
                     <div className="tesseract-wrapper">
                         <div className="feature-grid-bg"></div>
                         <div className="feature-logo-float">
-                            <img src={logo} alt="Rich logo" />
+                            <img src={logo} alt="Syrex logo" />
                         </div>
                     </div>
                 </motion.div>
