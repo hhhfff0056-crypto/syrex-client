@@ -1,0 +1,46 @@
+name: Build provided Syrex site
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.source/**'
+      - '.github/workflows/syrex-build.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: .source/package-lock.json
+      - name: Install dependencies
+        working-directory: .source
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build supplied frontend
+        working-directory: .source
+        run: |
+          sed -i 's/<BrowserRouter>/<BrowserRouter basename="\/syrex-client">/' src/main.jsx
+          npm run build -- --base=/syrex-client/
+      - name: Publish built files to root
+        run: |
+          cp .source/dist/index.html index.html
+          cp .source/dist/index.html 404.html
+          rm -rf assets
+          cp -a .source/dist/assets ./assets
+          if [ -f .source/dist/vite.svg ]; then cp .source/dist/vite.svg vite.svg; fi
+          touch .nojekyll
+          git add index.html 404.html assets .nojekyll
+          if [ -f vite.svg ]; then git add vite.svg; fi
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Publish original Syrex frontend [skip ci]"
+          git push
