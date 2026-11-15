@@ -125,6 +125,63 @@
     .reveal.seen { opacity:1; transform:translate(0,0); }
     @keyframes float { 0%,100% { transform:translateY(-5px); } 50% { transform:translateY(15px); } }
     @keyframes spin { to { transform:rotateX(67deg) rotateZ(345deg); } }
+
+    /* SYREX MOTION PACK V2 — layered animation, responsive & motion-safe */
+    .scroll-progress { position:fixed; top:74px; left:0; width:100%; height:2px; z-index:45; background:linear-gradient(90deg,#5e849e,#deecf7,#91b9d2); transform:scaleX(0); transform-origin:left center; will-change:transform; pointer-events:none; box-shadow:0 0 13px #a2d1f077; }
+    .topbar { transition:background .35s,border-color .35s,box-shadow .35s; }
+    .topbar.scrolled { background:#090c11ee; border-color:#7391a62d; box-shadow:0 8px 40px #0007; }
+    .hero::before { animation:ambientBreath 11s ease-in-out infinite alternate; }
+    .hero .eyebrow, .hero h1, .hero .hero-lead, .hero .hero-buttons, .hero .hero-tag { animation:heroRise .85s cubic-bezier(.18,.74,.2,1) both; }
+    .hero .eyebrow { animation-delay:.05s; } .hero h1 { animation-delay:.16s; }
+    .hero .hero-lead { animation-delay:.29s; } .hero .hero-buttons { animation-delay:.43s; }
+    .hero .hero-tag { animation-delay:.57s; }
+    .hero h1 span { background-image:linear-gradient(115deg,#fff 5%,#97adc1 37%,#fff 51%,#9ab4c8 75%,#fff 95%); background-size:230% 100%; animation:headlineShine 8s linear infinite; }
+    .hero .art { transform:translate3d(0,var(--art-scroll,0px),0) rotateX(var(--art-y,0deg)) rotateY(var(--art-x,0deg)); transition:transform .32s cubic-bezier(.15,.7,.2,1); animation:artAppear 1.2s .18s both; }
+    .art .orb { animation:orbGlow 6s ease-in-out infinite alternate; }
+    .monolith { overflow:hidden; }
+    .monolith::after { content:""; position:absolute; z-index:2; width:75%; height:175%; left:-110%; top:-38%; transform:rotate(24deg); background:linear-gradient(90deg,transparent,#e8f5ff19,transparent); animation:monolithGlint 8s ease-in-out infinite; pointer-events:none; }
+    .pixel-cube { position:absolute; z-index:-1; width:43px; height:43px; border:1px solid #829bb56b; border-radius:7px; background:linear-gradient(145deg,#3a61722d,#101b240a); box-shadow:12px 12px 0 #111a226e,0 0 24px #90b5cd14,inset 0 0 25px #87aac322; transform:rotate(30deg); }
+    .cube-one { right:14%; top:6%; animation:cubeFloat 9s ease-in-out infinite; }
+    .cube-two { left:13%; bottom:12%; width:27px; height:27px; animation:cubeFloat 7s -3s ease-in-out infinite reverse; }
+    .hero-stars { position:absolute; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+    .hero-star { position:absolute; width:2px; height:2px; border-radius:50%; background:#c6e0f2; opacity:.42; box-shadow:0 0 9px 2px #b7dcf75a; animation:starPulse var(--dur,4s) ease-in-out var(--delay,0s) infinite alternate; }
+    .ticker { height:54px; overflow:hidden; border-top:1px solid #455e713b; border-bottom:1px solid #455e713b; background:#0d1218; display:flex; align-items:center; }
+    .ticker-track { display:flex; width:max-content; animation:tickerScroll 35s linear infinite; }
+    .ticker-run { display:flex; align-items:center; gap:55px; padding-right:55px; white-space:nowrap; font-size:11px; font-weight:750; letter-spacing:.23em; color:#8299ac; }
+    .ticker-run b { color:#d0e4f2; font-size:15px; }
+    .ticker:hover .ticker-track { animation-play-state:paused; }
+    .btn { position:relative; overflow:hidden; isolation:isolate; }
+    .btn::after { content:""; position:absolute; z-index:-1; left:-145%; top:-130%; width:70%; height:350%; transform:rotate(30deg); background:linear-gradient(90deg,transparent,#fff7,transparent); transition:left .65s cubic-bezier(.2,.8,.2,1); pointer-events:none; }
+    .btn:hover::after { left:180%; }
+    .card::before { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; opacity:0; transition:opacity .3s; background:radial-gradient(250px circle at var(--mouse-x,50%) var(--mouse-y,50%),#a7d6f026,transparent 70%); }
+    .card:hover::before { opacity:1; }
+    .card.reveal.seen { transform:perspective(1100px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translateY(var(--hover-y,0px)); transition:transform .28s cubic-bezier(.18,.75,.2,1), border-color .4s,box-shadow .4s; }
+    .card.reveal.seen:hover { --hover-y:-7px; }
+    .mockup.reveal.seen { transform:perspective(1100px) rotateX(var(--tilt-x,3deg)) rotateY(var(--tilt-y,-4deg)); transition:transform .28s ease,box-shadow .4s ease; }
+    .mockup.reveal.seen:hover { box-shadow:0 48px 115px #000c,0 0 0 7px #52779720; }
+    .tab.active { animation:tabGlow .38s ease-out both; }
+    .mock-main .mock-setting { animation:settingEnter .42s cubic-bezier(.2,.8,.2,1) both; }
+    .mock-setting:nth-child(2){animation-delay:.06s;} .mock-setting:nth-child(3){animation-delay:.12s;} .mock-setting:nth-child(4){animation-delay:.18s;}
+    .release .container { isolation:isolate; }
+    .release .container::before { content:""; position:absolute; inset:-80%; z-index:-1; border-radius:50%; background:conic-gradient(from 0deg,transparent 40%,#86aac219 50%,transparent 60%,transparent); animation:releaseOrbit 22s linear infinite; pointer-events:none; }
+    details[open] p { animation:faqEnter .3s ease-out both; }
+    summary::after { transition:transform .3s ease,color .3s ease; }
+    details[open] summary::after { transform:rotate(180deg); color:#deecf7; }
+    .reveal[data-reveal] { opacity:0; filter:blur(8px); transform:translate3d(var(--rx,0px),var(--ry,48px),0) rotate(var(--rot,0deg)) scale(.94); transition:opacity .85s ease,filter .95s ease,transform 1s cubic-bezier(.16,.78,.2,1); transition-delay:var(--reveal-delay,0ms); will-change:transform,opacity; }
+    .reveal[data-reveal].seen { opacity:1; filter:blur(0); transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+    @keyframes heroRise { from { opacity:0; transform:translate3d(0,36px,0); filter:blur(8px); } to { opacity:1; transform:translate3d(0,0,0); filter:blur(0); } }
+    @keyframes artAppear { from { opacity:0; filter:blur(12px); } to { opacity:1; filter:blur(0); } }
+    @keyframes headlineShine { 0%{ background-position:100% 0; } 100%{ background-position:-100% 0; } }
+    @keyframes ambientBreath { from{ transform:scale(1) translateX(-1%); opacity:.7; } to{ transform:scale(1.16) translateX(3%); opacity:1; } }
+    @keyframes orbGlow { from{ opacity:.46; transform:scale(.92); } to{ opacity:1; transform:scale(1.13); } }
+    @keyframes monolithGlint { 0%,28%,100%{left:-140%;} 45%,60%{left:180%;} }
+    @keyframes cubeFloat { 0%,100%{transform:translate3d(0,0,0) rotate(20deg);} 50%{transform:translate3d(10px,-30px,0) rotate(55deg);} }
+    @keyframes starPulse { from{opacity:.12;transform:scale(.65);} to{opacity:.8;transform:scale(1.8);} }
+    @keyframes tickerScroll { to { transform:translateX(-50%); } }
+    @keyframes releaseOrbit { to{transform:rotate(360deg);} }
+    @keyframes faqEnter { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes tabGlow { from{filter:brightness(1.4);} to{filter:brightness(1);} }
+    @keyframes settingEnter { from{opacity:0;transform:translateX(12px);} to{opacity:1;transform:translateX(0);} }
     @media(max-width:980px) {
       .hero-grid { grid-template-columns:1fr .85fr; }
       .hero { padding:90px 0; }
@@ -134,6 +191,15 @@
       .show-layout { gap:25px; }
     }
     @media(max-width:760px) {
+      .scroll-progress { top:66px; }
+      .art { --art-scroll:0px!important; }
+      .ticker { height:46px; }
+      .ticker-run { font-size:10px; gap:34px; padding-right:34px; }
+      .card.reveal.seen { transform:none; }
+      .mockup.reveal.seen { transform:none; }
+      .pixel-cube.cube-one { right:8%; }
+      .pixel-cube.cube-two { left:7%; }
+      .hero-star { opacity:.3; }
       .container { width:min(100% - 32px,1180px); }
       .nav { height:66px; }
       .navlinks { position:absolute; left:0; right:0; top:65px; padding:18px 20px 24px; background:#0b0f14; border-bottom:1px solid #283542; flex-direction:column; align-items:stretch; gap:20px; display:none; }
@@ -175,12 +241,16 @@
     @media(prefers-reduced-motion:reduce) {
       html { scroll-behavior:auto; }
       *,*::before,*::after { animation:none!important; transition:none!important; }
-      .reveal { opacity:1; transform:none; }
+      .reveal, .reveal[data-reveal], .reveal[data-reveal].seen { opacity:1; filter:none; transform:none; will-change:auto; }
+      .hero .art, .card.reveal.seen, .mockup.reveal.seen { transform:none!important; }
+      .scroll-progress { will-change:auto; }
+      .hero .eyebrow,.hero h1,.hero .hero-lead,.hero .hero-buttons,.hero .hero-tag { opacity:1; filter:none; transform:none; }
     }
   </style>
 </head>
 <body>
 <div class="noise" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"></div>
 <header class="topbar">
   <nav class="container nav" aria-label="Основная навигация">
     <a class="brand" href="#home" aria-label="Syrex Client, главная"><span class="logo">S</span><span>SYREX<small>CLIENT</small></span></a>
@@ -201,13 +271,17 @@
       <div class="hero-tag">SYREX / EST. 2026 / PREVIEW</div>
     </div>
     <div class="art" aria-label="Объёмная эмблема S в металлическом стиле">
-      <div class="orb"></div><div class="rings"></div>
+      <div class="orb"></div><div class="rings"></div><div class="pixel-cube cube-one" aria-hidden="true"></div><div class="pixel-cube cube-two" aria-hidden="true"></div>
       <div class="monolith-wrap"><div class="monolith"><span class="s">S</span></div></div>
       <div class="hud-chip hud-one">Project status<strong><span class="chip-signal"></span>Preview</strong></div>
       <div class="hud-chip hud-two">Design system<strong>SYREX / 01</strong></div>
     </div>
   </div>
 </section>
+<div class="ticker" aria-hidden="true"><div class="ticker-track">
+  <div class="ticker-run"><span>SYREX EXPERIENCE</span><b>✦</b><span>YOUR WORLD / YOUR RULES</span><b>✦</b><span>INTERFACE IN MOTION</span><b>✦</b></div>
+  <div class="ticker-run"><span>SYREX EXPERIENCE</span><b>✦</b><span>YOUR WORLD / YOUR RULES</span><b>✦</b><span>INTERFACE IN MOTION</span><b>✦</b></div>
+</div></div>
 <div class="separator"></div>
 <section id="about" class="section">
   <div class="container">
@@ -312,7 +386,89 @@
     close.addEventListener('click',hideModal);ok.addEventListener('click',hideModal);
     modal.addEventListener('click',e=>{if(e.target===modal)hideModal();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))hideModal();});
-    if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+
+    // SYREX MOTION PACK V2: scroll assembly and optional pointer depth.
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduceMotion) {
+      const revealDirections = [
+        [-84,0],[0,-65],[88,0],[0,70],[-60,35],[60,-30],[0,65]
+      ];
+      const revealEls = [...document.querySelectorAll('.reveal')];
+      revealEls.forEach((el,idx)=>{
+        const dir = revealDirections[(idx*5+Math.floor(idx/3)+2) % revealDirections.length];
+        const scale = innerWidth < 760 ? .48 : 1;
+        const groupIndex = [...el.parentElement.children].filter(node=>node.classList?.contains('reveal')).indexOf(el);
+        el.dataset.reveal = 'assembled';
+        el.style.setProperty('--rx',Math.round(dir[0]*scale)+'px');
+        el.style.setProperty('--ry',Math.round(dir[1]*scale)+'px');
+        el.style.setProperty('--rot',((idx%3)-1)*2+'deg');
+        el.style.setProperty('--reveal-delay',Math.min(Math.max(groupIndex,0)*90,350)+'ms');
+      });
+      const hero=document.getElementById('home');
+      const stars=document.createElement('div');stars.className='hero-stars';stars.setAttribute('aria-hidden','true');
+      for(let i=0;i<23;i++){
+        const s=document.createElement('span');s.className='hero-star';
+        const seed=(i*67+13)%101;
+        s.style.left=((i*47+11)%97)+'%';
+        s.style.top=((i*31+19)%91)+'%';
+        s.style.setProperty('--dur',(3+seed%6)+'s');
+        s.style.setProperty('--delay',(-seed/10)+'s');
+        stars.appendChild(s);
+      }
+      hero.prepend(stars);
+    }
+
+    const progress=document.querySelector('.scroll-progress');
+    const topbar=document.querySelector('.topbar');
+    const artwork=document.querySelector('.art');
+    let scrollScheduled=false;
+    function updateScroll(){
+      const fullHeight=document.documentElement.scrollHeight-innerHeight;
+      const amount=Math.max(0,Math.min(1,fullHeight>0?scrollY/fullHeight:0));
+      progress.style.transform='scaleX('+amount+')';
+      topbar.classList.toggle('scrolled',scrollY>22);
+      if(!reduceMotion && innerWidth>760){
+        artwork.style.setProperty('--art-scroll',Math.min(60,scrollY*.11)+'px');
+      }
+      scrollScheduled=false;
+    }
+    addEventListener('scroll',()=>{
+      if(!scrollScheduled){scrollScheduled=true;requestAnimationFrame(updateScroll);}
+    },{passive:true});
+    addEventListener('resize',updateScroll,{passive:true});
+    updateScroll();
+
+    if (!reduceMotion && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const tiltElements=[...document.querySelectorAll('.card,.mockup')];
+      tiltElements.forEach(el=>{
+        el.addEventListener('pointermove',(event)=>{
+          if(!el.classList.contains('seen')) return;
+          const rect=el.getBoundingClientRect();
+          const nx=(event.clientX-rect.left)/rect.width-.5;
+          const ny=(event.clientY-rect.top)/rect.height-.5;
+          el.style.setProperty('--tilt-x',(-ny*7).toFixed(2)+'deg');
+          el.style.setProperty('--tilt-y',(nx*9).toFixed(2)+'deg');
+          el.style.setProperty('--mouse-x',((nx+.5)*100).toFixed(1)+'%');
+          el.style.setProperty('--mouse-y',((ny+.5)*100).toFixed(1)+'%');
+        },{passive:true});
+        el.addEventListener('pointerleave',()=>{
+          el.style.setProperty('--tilt-x',el.classList.contains('mockup')?'3deg':'0deg');
+          el.style.setProperty('--tilt-y',el.classList.contains('mockup')?'-4deg':'0deg');
+        });
+      });
+      artwork.addEventListener('pointermove',e=>{
+        const rect=artwork.getBoundingClientRect();
+        const rx=(e.clientX-rect.left)/rect.width-.5;
+        const ry=(e.clientY-rect.top)/rect.height-.5;
+        artwork.style.setProperty('--art-x',(rx*10).toFixed(2)+'deg');
+        artwork.style.setProperty('--art-y',(-ry*8).toFixed(2)+'deg');
+      },{passive:true});
+      artwork.addEventListener('pointerleave',()=>{
+        artwork.style.setProperty('--art-x','0deg');
+        artwork.style.setProperty('--art-y','0deg');
+      });
+    }
+    if('IntersectionObserver' in window && !reduceMotion){
       const observer=new IntersectionObserver((items)=>items.forEach(item=>{if(item.isIntersecting){item.target.classList.add('seen');observer.unobserve(item.target);}}),{threshold:.08,rootMargin:'0px 0px -35px 0px'});
       document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
     } else {document.querySelectorAll('.reveal').forEach(el=>el.classList.add('seen'));}
