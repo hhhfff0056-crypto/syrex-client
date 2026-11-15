@@ -106,10 +106,10 @@
 }
 
 .brand-logo-image {
-    height: 20px;
+    height: 29px;
     width: auto;
     display: block;
-    filter: brightness(0) saturate(100%) invert(75%) sepia(45%) saturate(518%) hue-rotate(8deg) brightness(98%) contrast(95%);
+    filter: none;
 }
 
 .brand-name {

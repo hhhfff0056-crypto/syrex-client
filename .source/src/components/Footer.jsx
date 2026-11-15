@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { Mail, Home, Box, Shield, FileText, Send, LogIn, UserPlus, Layers, MessageSquare, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/images/logo/richlogo.png';
+import logo from '../assets/images/logo/syrex-logo.png';
 import { useLanguage } from '../context/LanguageContext';
 import './Footer.css';
 
@@ -31,7 +31,7 @@ const Footer = () => {
                                     Discord
                                 </a>
                             </li>
-                            <li><a href="https://t.me/richclientnew" target="_blank" rel="noopener noreferrer"><Send size={16} className="icon-grey" /> Telegram</a></li>
+                            <li><a href="mailto:syrexdlc@gmail.com"><Send size={16} className="icon-grey" /> Email</a></li>
                         </ul>
                     </div>
 
@@ -39,8 +39,8 @@ const Footer = () => {
 
                 <div className="footer-brand-section">
                     <div className="brand-logo">
-                        <img src={logo} alt="Rich logo" className="brand-logo-image" />
-                        <span className="brand-name">Rich</span>
+                        <img src={logo} alt="Syrex logo" className="brand-logo-image" />
+                        <span className="brand-name">Syrex</span>
                     </div>
                     <p className="brand-tagline">
                         {t.footer.tagline1}<br />
@@ -55,7 +55,7 @@ const Footer = () => {
                     </div>
 
                     <div className="footer-center-copyright">
-                        Rich Client © All rights reserved
+                        Syrex Client © All rights reserved
                     </div>
 
                     <div className="copyright">

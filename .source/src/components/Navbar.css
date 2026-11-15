@@ -60,13 +60,13 @@
 }
 
 .logo-image {
-    height: 28px;
+    height: 34px;
     width: auto;
     display: block;
     position: relative;
     z-index: 1;
     opacity: 1;
-    filter: brightness(0) saturate(100%) invert(75%) sepia(45%) saturate(518%) hue-rotate(8deg) brightness(98%) contrast(95%);
+    filter: none;
 }
 
 .logo-text {
@@ -584,7 +584,7 @@
     .navbar { top: 10px; padding: 0 12px; }
     .nav-capsule { padding: 7px 8px; min-height: 54px; gap: 5px; }
     .logo-section { padding: 4px 8px 4px 4px; gap: 7px; }
-    .logo-image { height: 24px; }
+    .logo-image { height: 30px; }
     .logo-text { font-size: 17px; }
     .logo-section::after { display: none; }
     .nav-right-actions { gap: 6px; }

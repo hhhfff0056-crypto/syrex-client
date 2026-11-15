@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { getAuthItem, clearAuth } from '../utils/authStorage';
-import logo from '../assets/images/logo/richlogo.png';
+import logo from '../assets/images/logo/syrex-logo.png';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -108,9 +108,9 @@ const Navbar = () => {
       aria-label="Site navigation"
     >
       <div className="nav-capsule">
-        <Link to="/" className="logo-section" aria-label="Rich, home" onClick={() => setIsMenuOpen(false)}>
+        <Link to="/" className="logo-section" aria-label="Syrex, home" onClick={() => setIsMenuOpen(false)}>
           <span className="logo-badge"><img src={logo} alt="" className="logo-image" /></span>
-          <span className="logo-text">Rich</span>
+          <span className="logo-text">Syrex</span>
         </Link>
 
         <div className="nav-links" aria-label="Main links">

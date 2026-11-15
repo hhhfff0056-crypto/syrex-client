@@ -79,7 +79,7 @@ const Hero = () => {
                         className="btn-hero-secondary"
                         type="button"
                         onClick={() => {
-                            window.open('https://t.me/RichClientDevLogs', '_blank', 'noopener,noreferrer');
+                            window.location.href = 'mailto:syrexdlc@gmail.com';
                         }}
                     >
                         <Globe size={18} /> <span className="btn-gradient-text">{t.hero.btnSecondary}</span>
