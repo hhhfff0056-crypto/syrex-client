@@ -29,6 +29,19 @@ jobs:
         run: |
           sed -i 's/<BrowserRouter>/<BrowserRouter basename="\/syrex-client">/' src/main.jsx
           npm run build -- --base=/syrex-client/
+      - name: Obfuscate client-side JavaScript
+        working-directory: .source
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund javascript-obfuscator@4.1.1
+          node scripts/obfuscate-dist.cjs
+          for file in dist/assets/*.js; do node --check "$file"; done
+      - name: Reject public source maps
+        working-directory: .source
+        run: |
+          if find dist -type f -name '*.map' | grep -q .; then
+            echo 'Source maps must not be shipped.'
+            exit 1
+          fi
       - name: Publish built files to root
         run: |
           cp .source/dist/index.html index.html
