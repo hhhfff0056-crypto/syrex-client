@@ -17,6 +17,16 @@
     button { font:inherit; cursor:pointer; }
     button:focus-visible,a:focus-visible,summary:focus-visible { outline:2px solid var(--accent2); outline-offset:4px; }
     ::selection { color:#090b0e; background:var(--accent); }
+    /* Disable page text selection; keep future forms usable. */
+    html, body, body *:not(input):not(textarea):not([contenteditable]):not([contenteditable] *) {
+      -webkit-user-select:none;
+      user-select:none;
+      -webkit-touch-callout:none;
+    }
+    input, textarea, [contenteditable], [contenteditable] * {
+      -webkit-user-select:text;
+      user-select:text;
+    }
     .noise { position:fixed; inset:0; opacity:.05; pointer-events:none; z-index:10; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 170 170' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); }
     .container { width:min(1180px,calc(100% - 48px)); margin:auto; }
     .topbar { position:sticky; top:0; z-index:30; border-bottom:1px solid rgba(209,226,241,.09); background:rgba(8,10,13,.85); backdrop-filter:blur(22px); }
