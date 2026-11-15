@@ -51,7 +51,7 @@ const Footer = () => {
                 <div className="footer-bottom-bar">
                     <div className="feedback-section">
                         <span>{t.footer.feedback} </span>
-                        <a href="mailto:RichDLC@gmail.com" className="email-link">RichDLC@gmail.com</a>
+                        <a href="mailto:syrexdlc@gmail.com" className="email-link">syrexdlc@gmail.com</a>
                     </div>
 
                     <div className="footer-center-copyright">
