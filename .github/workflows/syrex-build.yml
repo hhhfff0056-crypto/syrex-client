@@ -36,8 +36,9 @@ jobs:
           rm -rf assets
           cp -a .source/dist/assets ./assets
           if [ -f .source/dist/vite.svg ]; then cp .source/dist/vite.svg vite.svg; fi
+          if [ -f .source/dist/syrex-logo.svg ]; then cp .source/dist/syrex-logo.svg syrex-logo.svg; fi
           touch .nojekyll
-          git add index.html 404.html assets .nojekyll
+          git add index.html 404.html assets .nojekyll syrex-logo.svg
           if [ -f vite.svg ]; then git add vite.svg; fi
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"

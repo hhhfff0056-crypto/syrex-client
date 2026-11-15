@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { getAuthItem, clearAuth } from '../utils/authStorage';
-import logo from '../assets/images/logo/syrex-logo.png';
+import logo from '../assets/images/logo/syrex-logo.svg';
 import './Navbar.css';
 
 const Navbar = () => {

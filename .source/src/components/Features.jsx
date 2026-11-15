@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import logo from '../assets/images/logo/syrex-logo.png';
+import logo from '../assets/images/logo/syrex-logo.svg';
 import './Features.css';
 
 const Features = () => {

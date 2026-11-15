@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { Mail, Home, Box, Shield, FileText, Send, LogIn, UserPlus, Layers, MessageSquare, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/images/logo/syrex-logo.png';
+import logo from '../assets/images/logo/syrex-logo.svg';
 import { useLanguage } from '../context/LanguageContext';
 import './Footer.css';
 
