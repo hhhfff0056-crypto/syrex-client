@@ -208,3 +208,18 @@ html {
 [data-theme="light"] *::-webkit-scrollbar-thumb:hover {
   background: #b3a483;
 }
+
+
+/* Disable selecting interface text on desktop and mobile. Form fields stay editable. */
+html, body, body * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable="true"], [contenteditable="true"] * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
