@@ -155,10 +155,10 @@
     .btn:hover::after { left:180%; }
     .card::before { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; opacity:0; transition:opacity .3s; background:radial-gradient(250px circle at var(--mouse-x,50%) var(--mouse-y,50%),#a7d6f026,transparent 70%); }
     .card:hover::before { opacity:1; }
-    .card.reveal.seen { transform:perspective(1100px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translateY(var(--hover-y,0px)); transition:transform .28s cubic-bezier(.18,.75,.2,1), border-color .4s,box-shadow .4s; }
-    .card.reveal.seen:hover { --hover-y:-7px; }
-    .mockup.reveal.seen { transform:perspective(1100px) rotateX(var(--tilt-x,3deg)) rotateY(var(--tilt-y,-4deg)); transition:transform .28s ease,box-shadow .4s ease; }
-    .mockup.reveal.seen:hover { box-shadow:0 48px 115px #000c,0 0 0 7px #52779720; }
+    .card.reveal[data-reveal].seen { transform:perspective(1100px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translateY(var(--hover-y,0px)); transition:transform .28s cubic-bezier(.18,.75,.2,1), border-color .4s,box-shadow .4s; }
+    .card.reveal[data-reveal].seen:hover { --hover-y:-7px; }
+    .mockup.reveal[data-reveal].seen { transform:perspective(1100px) rotateX(var(--tilt-x,3deg)) rotateY(var(--tilt-y,-4deg)); transition:transform .28s ease,box-shadow .4s ease; }
+    .mockup.reveal[data-reveal].seen:hover { box-shadow:0 48px 115px #000c,0 0 0 7px #52779720; }
     .tab.active { animation:tabGlow .38s ease-out both; }
     .mock-main .mock-setting { animation:settingEnter .42s cubic-bezier(.2,.8,.2,1) both; }
     .mock-setting:nth-child(2){animation-delay:.06s;} .mock-setting:nth-child(3){animation-delay:.12s;} .mock-setting:nth-child(4){animation-delay:.18s;}
@@ -195,8 +195,8 @@
       .art { --art-scroll:0px!important; }
       .ticker { height:46px; }
       .ticker-run { font-size:10px; gap:34px; padding-right:34px; }
-      .card.reveal.seen { transform:none; }
-      .mockup.reveal.seen { transform:none; }
+      .card.reveal[data-reveal].seen { transform:none; }
+      .mockup.reveal[data-reveal].seen { transform:none; }
       .pixel-cube.cube-one { right:8%; }
       .pixel-cube.cube-two { left:7%; }
       .hero-star { opacity:.3; }
@@ -242,7 +242,7 @@
       html { scroll-behavior:auto; }
       *,*::before,*::after { animation:none!important; transition:none!important; }
       .reveal, .reveal[data-reveal], .reveal[data-reveal].seen { opacity:1; filter:none; transform:none; will-change:auto; }
-      .hero .art, .card.reveal.seen, .mockup.reveal.seen { transform:none!important; }
+      .hero .art, .card.reveal[data-reveal].seen, .mockup.reveal[data-reveal].seen { transform:none!important; }
       .scroll-progress { will-change:auto; }
       .hero .eyebrow,.hero h1,.hero .hero-lead,.hero .hero-buttons,.hero .hero-tag { opacity:1; filter:none; transform:none; }
     }
