@@ -50,8 +50,9 @@ jobs:
           cp -a .source/dist/assets ./assets
           if [ -f .source/dist/vite.svg ]; then cp .source/dist/vite.svg vite.svg; fi
           if [ -f .source/dist/syrex-logo.svg ]; then cp .source/dist/syrex-logo.svg syrex-logo.svg; fi
+          if [ -f .source/dist/googlef96bb859bdff9264.html ]; then cp .source/dist/googlef96bb859bdff9264.html googlef96bb859bdff9264.html; fi
           touch .nojekyll
-          git add index.html 404.html assets .nojekyll syrex-logo.svg
+          git add index.html 404.html assets .nojekyll syrex-logo.svg googlef96bb859bdff9264.html
           if [ -f vite.svg ]; then git add vite.svg; fi
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
