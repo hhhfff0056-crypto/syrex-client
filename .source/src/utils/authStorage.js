@@ -1,7 +1,7 @@
 const AUTH_KEYS = ['authToken', 'refreshToken', 'authExpiresAt', 'authProvider', 'authUser', 'userId', 'username', 'userEmail', 'avatarDataUrl'];
 
-const hasSessionAuth = () => AUTH_KEYS.some((key) => sessionStorage.getItem(key));
-const hasLocalAuth = () => AUTH_KEYS.some((key) => localStorage.getItem(key));
+const hasSessionAuth = () => Boolean(sessionStorage.getItem('authToken'));
+const hasLocalAuth = () => Boolean(localStorage.getItem('authToken'));
 
 export const getAuthItem = (key) => {
   const sessionValue = sessionStorage.getItem(key);
