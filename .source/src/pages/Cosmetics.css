@@ -1,0 +1,22 @@
+.syrex-cosmetics{min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#332700 0,transparent 65%),#090909;color:#f8f8f8;padding:110px 18px 70px;font-family:inherit}
+.syrex-cosmetics-wrap{max-width:890px;margin:0 auto}.syrex-cosmetics-back{color:#b6b6b6;border:0;background:transparent;display:flex;align-items:center;gap:8px;padding:0;margin:0 0 32px;cursor:pointer;font:inherit}.syrex-cosmetics-back:hover{color:#ffd200}
+.syrex-cosmetics-head{display:flex;align-items:center;gap:18px;margin-bottom:25px}
+.syrex-cosmetics-icon{width:58px;height:58px;background:#ffcc00;color:#151000;border-radius:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 36px #ffcc0038}
+.syrex-cosmetics h1{font-size:clamp(27px,4vw,40px);margin:0 0 6px;font-weight:750;letter-spacing:-.8px}
+.syrex-cosmetics-head p{color:#aaa;margin:0}
+.syrex-cosmetics-note{display:flex;gap:14px;align-items:flex-start;border:1px solid #5b4a18;background:#17150d;border-radius:15px;padding:17px 19px;color:#e8e0bd;margin:24px 0 22px}
+.syrex-cosmetics-note svg{color:#ffd200;flex-shrink:0}.syrex-cosmetics-note small{display:block;color:#aaa;font-size:12px;margin-top:7px;word-break:break-all}
+.syrex-cosmetics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.syrex-cosmetics-tile{display:flex;flex-direction:column;gap:11px;background:#141414;border:1px solid #303030;padding:21px;border-radius:16px}
+.syrex-cosmetics-label{font-weight:650;color:#f1f1f1;font-size:16px}
+.syrex-cosmetics select{width:100%;border:1px solid #4a4125;border-radius:10px;background:#202020;color:#f5f5f5;padding:12px;font:inherit;cursor:pointer}
+.syrex-cosmetics select:focus{outline:2px solid #ffd200;outline-offset:1px}
+.syrex-cosmetics-actions{display:flex;gap:13px;margin-top:26px;flex-wrap:wrap}
+.syrex-cosmetics-actions button{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 20px;border-radius:11px;border:1px solid #444;font:inherit;font-weight:650;cursor:pointer}
+.syrex-cosmetics-primary{background:#ffcb00;color:#151000;border-color:#ffcb00!important}
+.syrex-cosmetics-secondary{background:#202020;color:#ddd}
+.syrex-cosmetics-actions button:disabled{opacity:.6;cursor:wait}
+.syrex-cosmetics-status,.syrex-cosmetics-foot{color:#aaa}
+.syrex-cosmetics-foot{margin-top:24px;font-size:13px}
+.syrex-cosmetics-error{color:#ff8c8c}.syrex-cosmetics-success{color:#ffe172}
+@media(max-width:600px){.syrex-cosmetics{padding-top:90px}.syrex-cosmetics-grid{grid-template-columns:1fr}.syrex-cosmetics-head{align-items:flex-start}}
