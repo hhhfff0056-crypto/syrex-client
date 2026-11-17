@@ -1,0 +1,32 @@
+name: Publish Syrex Free 1.21.11
+on:
+  push:
+    paths:
+      - .github/workflows/publish-free-jar.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build into release asset
+        env:
+          SOURCE_URL: "https://uc87c9247683940c6de539027fcf.dl.dropboxusercontent.com/cd/0/get/DMEQFTcQLNZb_XjWj7ac2qqRHxMxZvq8jBAXB4j-vXgnS41L5huLrzs4MW4JpLIgZ-XAyE0tDZ9-DQqJsiVouTyWcAXxOxJguzm370Zv8kysdv2w6fw9jgVOfCQx93-EWZT9MIk4JntXZWcKV95-VY-3TAEIZ0K-X9_t6RVKyqdJmw/file?c_luid=54ddfba7"
+        run: |
+          set -euo pipefail
+          curl --fail --location --show-error --silent --retry 0 --output /tmp/syrex-1.21.11.jar "$SOURCE_URL"
+          echo "3d3a7a085c9bc73d38e5b86d12721cf9b9f68500754d89e609508c83ed27e3f4  /tmp/syrex-1.21.11.jar" | sha256sum --check -
+          mv /tmp/syrex-1.21.11.jar "/tmp/syrex 1.21.11.jar"
+      - name: Upload public release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: hhhfff0056-crypto/syrex-client
+        run: |
+          set -euo pipefail
+          tag="free-1.21.11-20261117"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "/tmp/syrex 1.21.11.jar" --clobber
+          else
+            gh release create "$tag" "/tmp/syrex 1.21.11.jar" --title "Syrex Free 1.21.11" --notes "Updated free version for Minecraft 1.21.11."
+          fi
