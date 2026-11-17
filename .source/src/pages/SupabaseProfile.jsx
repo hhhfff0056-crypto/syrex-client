@@ -181,7 +181,7 @@ const SupabaseProfile = () => {
                   <div className="profile-row"><span><ShieldCheck size={14} /> Привязка HWID</span><strong>{device ? device.bound ? "Привязан" : "Не привязан" : "Проверяем…"}</strong></div>
                   {device?.boundAt && <div className="profile-row"><span><Calendar size={14} /> Дата привязки</span><strong>{new Date(device.boundAt).toLocaleDateString("ru-RU")}</strong></div>}
                 </div>
-                <p className="auth-profile-hint">HWID привязывается при первом входе в клиент с разрешения пользователя. Сервер хранит только защищённый отпечаток устройства, а не серийные номера. При смене компьютера обратитесь в поддержку для сброса. Free доступен без подписки, Premium — по активному ключу.</p>
+                <p className="auth-profile-hint">При первом входе в клиент HWID обязательно привязывается к аккаунту. Перед входом клиент сообщает об этом. Сервер хранит только защищённый отпечаток устройства, а не серийные номера. При смене компьютера обратитесь в поддержку для сброса. Free доступен без подписки, Premium — по активному ключу.</p>
                 {deviceError && <p className="auth-profile-hint" role="status">Статус HWID недоступен: {deviceError}</p>}
                 {error && <div className="login-error" role="alert">{error}</div>}
                 {notice && <div className="auth-success" role="status">{notice}</div>}
