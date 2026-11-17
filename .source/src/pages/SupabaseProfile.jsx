@@ -122,7 +122,7 @@ const SupabaseProfile = () => {
                   <h2>{displayName}</h2>
                   <div className="profile-sub">{account.email}</div>
                 </div>
-                <div className="profile-uid">UID: {account.id}</div>
+                <div className="profile-uid" aria-label="Числовой UID аккаунта">UID: {license?.uid ?? '…'}</div>
                 <div className="profile-tags">
                   <span className={`tag-pill role-badge ${accountRole === 'DEV' ? 'dev-role' : ''}`}><ShieldCheck size={13} /> {accountRole}</span>
                   <span className="tag-pill"><ShieldCheck size={13} /> Аккаунт подтверждён</span>

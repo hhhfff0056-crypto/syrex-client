@@ -126,7 +126,7 @@ const Keys = () => {
 
         {status && <div className="keys-panel keys-status">
           <div>
-            <span className="keys-panel-label"><ShieldCheck size={16} /> Статус доступа</span>
+            <span className="keys-panel-label"><ShieldCheck size={16} /> Статус доступа{Number.isSafeInteger(status.uid) ? ' · UID ' + status.uid : ''}</span>
             <h2>{status.active ? 'Версия Premium' : 'Версия Free'}</h2>
             <p>{status.isDeveloper ? 'Аккаунт DEV: Premium доступен без ключа.' :
               status.active ? 'Подписка Premium: ' + (status.expiresAt ? 'до ' + formatDate(status.expiresAt) : 'навсегда') :

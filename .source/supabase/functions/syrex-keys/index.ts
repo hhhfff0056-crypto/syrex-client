@@ -110,7 +110,14 @@ Deno.serve(async (req: Request) => {
       const freeFileReady = storedFreeFileReady || Boolean(freeFallbackUrl);
 
       if (action === "status") {
+        // Numeric, public-facing UID is assigned once by an auth.users DB trigger.
+        // Fetch it server-side; never accept a UID supplied by the browser.
+        const { data: identity, error: uidError } = await admin.from("syrex_user_uids")
+          .select("uid")
+          .eq("user_id", user.id).single();
+        if (uidError || !identity) throw uidError || new Error("User UID not assigned");
         return respond({
+          uid: Number(identity.uid),
           active, licensed, isDeveloper,
           edition: active ? "PREMIUM" : "FREE",
           activatedAt: license?.activated_at || null,

@@ -51,3 +51,18 @@ https://www.dropbox.com/scl/fi/p637g4pv1qmgnk813ex6h/syrex_1.21.11.jar?rlkey=vbn
 Публичный доступ: anyone with the link; разрешено скачивание.
 Ключ Premium для Free не требуется, но для кнопки нужен вход на сайт.
 Полная Premium-сборка по-прежнему защищена лицензией и закрытым бакетом Supabase.
+
+## Числовой UID пользователей
+
+`public.syrex_user_uids`: `user_id uuid` (internal PK, references auth.users.id),
+`uid bigint generated always as identity` (unique, shown to the user),
+`created_at`. Existing accounts were backfilled in creation order. A protected
+`AFTER INSERT` trigger on `auth.users` gives each new user the next number.
+
+The `syrex-keys` Edge Function `status` reads the number with the server-only
+service-role client and returns `uid: number`; the website displays it at
+`/profile` and `/keys`. There are no browser read/write permissions on the
+mapping table. Never use numeric UID instead of the internal Auth UUID for
+ownership checks, permissions, license linkage, or authentication.
+
+Database migration deployed: `syrex_sequential_user_uids`.
