@@ -11,7 +11,7 @@ import CreatorVideos from './components/CreatorVideos';
 import Footer from './components/Footer';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Profile from './pages/Profile';
+import SupabaseProfile from './pages/SupabaseProfile';
 import Tickets from './pages/Tickets';
 import Buy from './pages/Buy';
 import Products from './pages/Products';
@@ -83,7 +83,7 @@ function App() {
 
   useEffect(() => {
     const userId = getAuthItem('userId');
-    if (!userId) return;
+    if (!userId || getAuthItem('authProvider') === 'supabase') return;
     api.profile(userId)
       .then((res) => {
         const role = res.user?.role;
@@ -137,7 +137,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={<SupabaseProfile />} />
         <Route path="/profile/tikets" element={<Tickets />} />
         <Route path="/buy" element={<Buy />} />
         <Route path="/products" element={<Products />} />

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { setAuthItems } from '../utils/authStorage';
 import './Login.css';
+import './auth.css';
 
 const SITE_KEY = '6Lf4Y2AsAAAAAO42IHyx4h0XbfOb_GctRDW6E89g';
 

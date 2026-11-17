@@ -4,7 +4,8 @@ import { ChevronDown, Globe, Moon, Sun, Sparkles, ShoppingBag, PlayCircle, Menu,
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import { getAuthItem, clearAuth } from '../utils/authStorage';
+import { getAuthItem } from '../utils/authStorage';
+import { signOut as signOutAccount } from '../auth/supabaseAuth';
 import logo from '../assets/images/logo/syrex-logo.svg';
 import './Navbar.css';
 
@@ -56,7 +57,7 @@ const Navbar = () => {
   }, []);
 
   const signOut = () => {
-    clearAuth();
+    void signOutAccount();
     setIsAuthed(false);
     setIsMenuOpen(false);
     navigate('/');
