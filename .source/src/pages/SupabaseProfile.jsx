@@ -5,6 +5,7 @@ import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRou
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
 import { downloadFreeClient, downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
+import { getDeviceStatus } from '../services/deviceApi';
 import './Profile.css';
 import './SupabaseProfile.css';
 
@@ -18,6 +19,8 @@ const SupabaseProfile = () => {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [license, setLicense] = useState(null);
+  const [device, setDevice] = useState(null);
+  const [deviceError, setDeviceError] = useState('');
   const [downloading, setDownloading] = useState('');
 
   useEffect(() => {
@@ -31,6 +34,7 @@ const SupabaseProfile = () => {
       setAccount(user);
       setAuthItemAuto('authUser', String(user.app_metadata?.role || 'DEFAULT'));
       getLicenseStatus().then((state) => { if (active) setLicense(state); }).catch((err) => { if (active) setError(err.message); });
+      getDeviceStatus().then((state) => { if (active) setDevice(state); }).catch((err) => { if (active) setDeviceError(err.message); });
     }).catch((err) => {
       if (active) setError(err.message || 'Не удалось проверить аккаунт.');
     }).finally(() => {
@@ -174,8 +178,11 @@ const SupabaseProfile = () => {
                   <div className="profile-row"><span><Mail size={14} /> Email</span><strong>{account.email}</strong></div>
                   <div className="profile-row"><span><ShieldCheck size={14} /> Роль</span><strong>{accountRole}</strong></div>
                   <div className="profile-row"><span><Calendar size={14} /> Дата регистрации</span><strong>{joinedAt}</strong></div>
+                  <div className="profile-row"><span><ShieldCheck size={14} /> Привязка HWID</span><strong>{device ? device.bound ? "Привязан" : "Не привязан" : "Проверяем…"}</strong></div>
+                  {device?.boundAt && <div className="profile-row"><span><Calendar size={14} /> Дата привязки</span><strong>{new Date(device.boundAt).toLocaleDateString("ru-RU")}</strong></div>}
                 </div>
-                <p className="auth-profile-hint">Free-версия доступна без подписки после входа. Для Premium требуется активированный ключ. Файлы выдаются из закрытого хранилища Supabase; аватар остаётся в этом браузере.</p>
+                <p className="auth-profile-hint">HWID привязывается при первом входе в клиент с разрешения пользователя. Сервер хранит только защищённый отпечаток устройства, а не серийные номера. При смене компьютера обратитесь в поддержку для сброса. Free доступен без подписки, Premium — по активному ключу.</p>
+                {deviceError && <p className="auth-profile-hint" role="status">Статус HWID недоступен: {deviceError}</p>}
                 {error && <div className="login-error" role="alert">{error}</div>}
                 {notice && <div className="auth-success" role="status">{notice}</div>}
               </div>
