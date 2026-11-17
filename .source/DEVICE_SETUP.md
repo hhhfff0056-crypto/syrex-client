@@ -1,5 +1,35 @@
 # Syrex: сайт ↔ Minecraft-клиент, вход и HWID
 
+## Внутриигровая авторизация (готовые Java-классы)
+
+Добавлены следующие исходники (имена классов Minecraft в Mojang mappings, 1.21.11):
+
+- `client-integration/java/com/syrex/auth/SyrexAccountClient.java` — вход через Supabase.
+- `client-integration/java/com/syrex/auth/SyrexLoginScreen.java` — **настоящий Minecraft Screen**: поля email/пароль, скрытое отображение пароля, чекбокс согласия на привязку устройства, асинхронный вход, состояние ошибки, переход в клиент после входа.
+- `client-integration/java/com/syrex/auth/SyrexAuthGate.java` — открытие экрана и in-memory текущая сессия.
+
+В исходниках **реального** клиента (после получения их отдельной доступной копии) добавьте эти классы и вызовите экран, когда Minecraft готов показывать GUI:
+
+```java
+SyrexAuthGate.showLogin(
+    "<Supabase publishable key, НЕ service_role>",
+    () -> existingClientHwidProvider.getStableHwid()
+);
+```
+
+`existingClientHwidProvider` — пример: нужно подставить реальную функцию
+чтения HWID из **исходников** Syrex; она должна работать локально.
+Нельзя подключить этот вызов без знания конкретного класса и места инициализации
+мода. Для клиентов с Yarn mappings потребуются соответствующие имена Minecraft
+классов или remapping.
+
+**Внимание:** экран и API созданы в репозитории сайта как исходники для интеграции,
+а не встроены в JAR на Google Drive. В существующем архиве не внесены изменения.
+Пока не интегрирован startup hook и защита функций, режим Premium нельзя считать
+полностью защищённым: статус от UI не заменяет серверную проверку.
+Также для долгой сессии следует реализовать безопасное обновление Supabase JWT
+и повторную проверку лицензии: экран сейчас выполняет ручной вход на каждый запуск.
+
 ## Что уже подключено (17 ноября 2026)
 
 - Сайт: `https://hhhfff0056-crypto.github.io/syrex-client/`
