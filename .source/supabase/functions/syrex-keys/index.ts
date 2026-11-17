@@ -7,8 +7,8 @@ const allowedOrigin = "https://hhhfff0056-crypto.github.io";
 const bucketName = "syrex-client";
 const objectName = "SyrexClient.jar";
 const freeObjectName = "SyrexFree.jar";
-// Public source supplied by the Syrex owner; replace with a Dropbox public URL when available.
-const freeFallbackUrl = "https://drive.google.com/uc?export=download&id=19RjjDRApK5v09zwbZv_39SvEtKO0k0-Y";
+// Public Free edition: verified existing Dropbox shared link (dl=1 starts a download).
+const freeFallbackUrl = "https://www.dropbox.com/scl/fi/ptjoaft0f70v5l9c110s2/Syrex-Sword-1.21.11.jar?rlkey=7hji9ywpejozagfwmq2wqjqf2&dl=1";
 const headers = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",

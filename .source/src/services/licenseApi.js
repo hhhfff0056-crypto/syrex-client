@@ -41,4 +41,8 @@ const requestDownload = async (action) => {
 };
 
 export const downloadLicensedClient = () => requestDownload('download');
-export const downloadFreeClient = () => requestDownload('download-free');
+// Dropbox's dl=1 URL starts the public Free download without another API request.
+const freeDownloadUrl = 'https://www.dropbox.com/scl/fi/ptjoaft0f70v5l9c110s2/Syrex-Sword-1.21.11.jar?rlkey=7hji9ywpejozagfwmq2wqjqf2&dl=1';
+export const downloadFreeClient = () => {
+  window.location.assign(freeDownloadUrl);
+};
