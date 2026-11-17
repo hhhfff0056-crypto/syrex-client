@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Globe, Moon, Sun, Sparkles, ShoppingBag, PlayCircle, Menu, X } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { getAuthItem } from '../utils/authStorage';
-import { signOut as signOutAccount } from '../auth/supabaseAuth';
 import logo from '../assets/images/logo/syrex-logo.svg';
 import './Navbar.css';
 
@@ -17,7 +16,6 @@ const Navbar = () => {
   const [isAuthed, setIsAuthed] = useState(false);
   const navRef = useRef(null);
   const location = useLocation();
-  const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const languages = ['English', 'Russian', 'Polish'];
@@ -25,9 +23,16 @@ const Navbar = () => {
   useEffect(() => scrollY.on('change', (latest) => setIsScrolled(latest > 50)), [scrollY]);
 
   useEffect(() => {
-    setIsAuthed(!!getAuthItem('authUser'));
+    const syncAuth = () => setIsAuthed(Boolean(getAuthItem('authToken') && getAuthItem('userId')));
+    syncAuth();
     setIsMenuOpen(false);
     setIsLangOpen(false);
+    window.addEventListener('storage', syncAuth);
+    window.addEventListener('focus', syncAuth);
+    return () => {
+      window.removeEventListener('storage', syncAuth);
+      window.removeEventListener('focus', syncAuth);
+    };
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
@@ -55,13 +60,6 @@ const Navbar = () => {
       window.removeEventListener('resize', onResize);
     };
   }, []);
-
-  const signOut = () => {
-    void signOutAccount();
-    setIsAuthed(false);
-    setIsMenuOpen(false);
-    navigate('/');
-  };
 
   const navItems = [
     { to: '/', label: t.nav.home, icon: <span className="icon-grid">⌘</span> },
@@ -93,10 +91,7 @@ const Navbar = () => {
     if (!isAuthed) {
       return <Link to="/login" className={className} onClick={() => setIsMenuOpen(false)}>{t.nav.login}</Link>;
     }
-    if (location.pathname === '/profile') {
-      return <button type="button" className={className} onClick={signOut}>Sign out</button>;
-    }
-    return <Link to="/profile" className={className} onClick={() => setIsMenuOpen(false)}>Profile</Link>;
+    return <Link to="/profile" className={className} onClick={() => setIsMenuOpen(false)}>Личный кабинет</Link>;
   };
 
   return (
