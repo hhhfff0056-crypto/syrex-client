@@ -5,7 +5,7 @@
 Добавлены следующие исходники (имена классов Minecraft в Mojang mappings, 1.21.11):
 
 - `client-integration/java/com/syrex/auth/SyrexAccountClient.java` — вход через Supabase.
-- `client-integration/java/com/syrex/auth/SyrexLoginScreen.java` — **настоящий Minecraft Screen**: поля email/пароль, скрытое отображение пароля, чекбокс согласия на привязку устройства, асинхронный вход, состояние ошибки, переход в клиент после входа.
+- `client-integration/java/com/syrex/auth/SyrexLoginScreen.java` — **настоящий Minecraft Screen**: поля email/пароль, скрытое отображение пароля, постоянное предупреждение об обязательной привязке устройства (без отдельной галочки), асинхронный вход, состояние ошибки, переход в клиент после входа.
 - `client-integration/java/com/syrex/auth/SyrexAuthGate.java` — открытие экрана и in-memory текущая сессия.
 
 В исходниках **реального** клиента (после получения их отдельной доступной копии) добавьте эти классы и вызовите экран, когда Minecraft готов показывать GUI:
@@ -49,7 +49,7 @@ SyrexAuthGate.showLogin(
 
 1. Добавьте `SyrexAccountClient.java` в Java-проект Minecraft. Используйте
    уже имеющийся Gson; не помещайте `service_role` или секретные ключи в JAR.
-2. После согласия пользователя привязать устройство получите стабильный HWID
+2. При входе пользователя с уведомлением об обязательной привязке получите стабильный HWID
    через уже имеющийся **локальный** HWID-провайдер вашего клиента.
    Передайте в `loginAndBind(email, password, localHwid)` **локальный** HWID.
    Адаптер сам отправляет только `SHA-256("syrex-hwid-v1:" + localHwid)`.
