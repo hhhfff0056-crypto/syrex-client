@@ -4,6 +4,34 @@ const baseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/,
 const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
 export const authConfigured = /^https:\/\/[^/]+$/i.test(baseUrl) && key.startsWith('sb_publishable_');
 
+// Google reCAPTCHA is optional until the site owner configures both keys.
+// Google tokens are verified by a Supabase Edge Function, not trusted in the browser.
+// For enforcement at the underlying public GoTrue endpoints, use the native
+// Supabase CAPTCHA providers (hCaptcha or Turnstile) instead.
+const recaptchaEnabled = Boolean((import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim());
+
+const verifyRecaptcha = async (captchaToken) => {
+  if (!recaptchaEnabled) return;
+  if (!captchaToken) throw new Error('Подтвердите, что вы не робот.');
+  let response;
+  try {
+    response = await fetch(baseUrl + '/functions/v1/verify-recaptcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key },
+      body: JSON.stringify({ token: captchaToken }),
+      cache: 'no-store'
+    });
+  } catch {
+    throw new Error('Сервис reCAPTCHA недоступен. Попробуйте позже.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.success !== true) {
+    throw new Error(response.status === 503
+      ? 'reCAPTCHA ещё не настроена администратором сайта.'
+      : 'Не удалось подтвердить reCAPTCHA. Пройдите проверку заново.');
+  }
+};
+
 const redirectUrl = () => window.location.origin + import.meta.env.BASE_URL + 'login';
 
 const request = async (path, { method = 'GET', payload, accessToken } = {}) => {
@@ -50,17 +78,19 @@ const persistSession = (result, remember) => {
 };
 
 export const signIn = async (email, password, remember = true, captchaToken = '') => {
+  await verifyRecaptcha(captchaToken);
   const result = await request('token?grant_type=password', {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password, ...(captchaToken ? { captcha_token: captchaToken } : {}) }
+    payload: { email: email.trim().toLowerCase(), password }
   });
   return persistSession(result, remember);
 };
 
 export const register = async (username, email, password, captchaToken = '') => {
+  await verifyRecaptcha(captchaToken);
   const result = await request('signup?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() }, ...(captchaToken ? { captcha_token: captchaToken } : {}) }
+    payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() } }
   });
   if (result.access_token && result.refresh_token) {
     return { needsConfirmation: false, user: persistSession(result, true) };
@@ -133,9 +163,10 @@ export const completeEmailRedirect = async () => {
 };
 
 export const sendRecovery = async (email, captchaToken = '') => {
+  await verifyRecaptcha(captchaToken);
   return request('recover?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), ...(captchaToken ? { captcha_token: captchaToken } : {}) }
+    payload: { email: email.trim().toLowerCase() }
   });
 };
 

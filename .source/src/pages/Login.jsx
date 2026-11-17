@@ -3,7 +3,7 @@ import { Lock, Mail, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authConfigured, completeEmailRedirect, sendRecovery, signIn, updatePassword } from '../auth/supabaseAuth';
-import TurnstileCaptcha, { captchaEnabled } from '../components/TurnstileCaptcha';
+import GoogleRecaptcha, { captchaEnabled } from '../components/GoogleRecaptcha';
 import './Login.css';
 import './auth.css';
 
@@ -129,7 +129,7 @@ const Login = () => {
               <button className="auth-text-button" type="button" onClick={() => changeMode('recover')}>Забыли пароль?</button>
             </div>}
             {mode !== 'newPassword' && captchaEnabled &&
-              <TurnstileCaptcha ref={captchaRef} onTokenChange={setCaptchaToken} />}
+              <GoogleRecaptcha ref={captchaRef} onTokenChange={setCaptchaToken} />}
             {error && <div className="login-error" role="alert">{error}</div>}
             {notice && <div className="auth-success" role="status">{notice}</div>}
             <button className="btn-hero-primary login-submit" type="submit" disabled={!authConfigured || working || (captchaEnabled && mode !== 'newPassword' && !captchaToken)}>
