@@ -26,3 +26,18 @@
 - Админ-панель, платные подписки, активация ключей, тикеты и скачивание клиента **не подключены** к Supabase. Настраивать права нужно на сервере и в Row Level Security; нельзя доверять флагу в localStorage.
 - Картинка аватара хранится локально в браузере, пока не подключено защищённое хранилище.
 - Никнейм хранится в user_metadata; уникальность по никнейму и поиск по нику не реализованы. Вход работает по email.
+
+## CAPTCHA: Cloudflare Turnstile
+
+Supabase Auth поддерживает проверку токена CAPTCHA на сервере (не только галочку на странице).
+Для реальной защиты нужны **два разных ключа** Cloudflare Turnstile. Сейчас виджет на сайте
+включается только после указания реального **Site Key**; до настройки новый компонент капчи
+не отображается, и вход/регистрация продолжают работать как раньше.
+
+1. В [Cloudflare Turnstile](https://dash.cloudflare.com/) создайте виджет с hostname `hhhfff0056-crypto.github.io` (без пути `/syrex-client/`). Тип — Managed.
+2. Публичный **Site Key** добавьте в GitHub: Settings → Secrets and variables → Actions → Variables → `VITE_TURNSTILE_SITE_KEY`. Это публичное значение, оно попадает в JS.
+3. Пересоберите сайт запуском GitHub Actions `Build provided Syrex site` (или изменением файла в `.source/`). Убедитесь, что CAPTCHA видна и проходит на `/login`, `/register` и в форме восстановления пароля.
+4. Только после этого откройте [Supabase Bot and Abuse Protection](https://supabase.com/dashboard/project/schhzjmsgdjicoiadoqx/auth/protection), включите **Enable CAPTCHA protection**, выберите **Turnstile** и сохраните **Secret Key** виджета. Секрет нельзя хранить в GitHub, Vite, JavaScript или отправлять в чат.
+5. Проверьте в реальном браузере три потока: **регистрация**, **вход**, **восстановление пароля**. Supabase должен отклонять запросы без верного CAPTCHA-токена.
+
+Используется поле `captcha_token` REST API Supabase Auth. CAPTCHA-токен после каждой отправки формы сбрасывается. Проверка на сервере не работает, пока защита не включена в настройках Supabase.

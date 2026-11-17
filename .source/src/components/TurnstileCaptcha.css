@@ -1,0 +1,3 @@
+.auth-captcha { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; min-height: 68px; }
+.auth-captcha-widget { max-width: 100%; }
+.auth-captcha .login-error { line-height: 1.5; }

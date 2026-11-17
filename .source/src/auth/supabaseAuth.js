@@ -49,18 +49,18 @@ const persistSession = (result, remember) => {
   return user;
 };
 
-export const signIn = async (email, password, remember = true) => {
+export const signIn = async (email, password, remember = true, captchaToken = '') => {
   const result = await request('token?grant_type=password', {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password }
+    payload: { email: email.trim().toLowerCase(), password, ...(captchaToken ? { captcha_token: captchaToken } : {}) }
   });
   return persistSession(result, remember);
 };
 
-export const register = async (username, email, password) => {
+export const register = async (username, email, password, captchaToken = '') => {
   const result = await request('signup?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() } }
+    payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() }, ...(captchaToken ? { captcha_token: captchaToken } : {}) }
   });
   if (result.access_token && result.refresh_token) {
     return { needsConfirmation: false, user: persistSession(result, true) };
@@ -132,10 +132,10 @@ export const completeEmailRedirect = async () => {
   return emailRedirectPromise;
 };
 
-export const sendRecovery = async (email) => {
+export const sendRecovery = async (email, captchaToken = '') => {
   return request('recover?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase() }
+    payload: { email: email.trim().toLowerCase(), ...(captchaToken ? { captcha_token: captchaToken } : {}) }
   });
 };
 

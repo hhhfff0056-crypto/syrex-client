@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound } from 'lucide-react';
-import { getCurrentUser, sendRecovery, signOut } from '../auth/supabaseAuth';
+import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
 import './Profile.css';
 import './SupabaseProfile.css';
@@ -39,19 +39,9 @@ const SupabaseProfile = () => {
     navigate('/', { replace: true });
   };
 
-  const askReset = async () => {
-    if (!account?.email || busy) return;
-    setBusy(true);
-    setError('');
-    setNotice('');
-    try {
-      await sendRecovery(account.email);
-      setNotice('Письмо для смены пароля отправлено на вашу почту.');
-    } catch (err) {
-      setError(err.message || 'Не удалось отправить письмо.');
-    } finally {
-      setBusy(false);
-    }
+  const askReset = () => {
+    if (!account?.email) return;
+    navigate('/login?recover=1&email=' + encodeURIComponent(account.email));
   };
 
   const selectAvatar = (event) => {
