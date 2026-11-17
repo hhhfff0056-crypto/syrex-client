@@ -57,7 +57,32 @@ function BrowserCheck({ onVerified }) {
   const [requestId, setRequestId] = useState('—');
   const [retryCount, setRetryCount] = useState(0);
   const [problem, setProblem] = useState('');
+  const [publicIp, setPublicIp] = useState('Определяется...');
+  const [ipVisible, setIpVisible] = useState(false);
   const onComplete = useCallback(() => onVerified(), [onVerified]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('https://api64.ipify.org?format=json', {
+      signal: controller.signal,
+      cache: 'no-store',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer'
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('IP lookup failed');
+        return response.json();
+      })
+      .then(({ ip }) => {
+        const address = typeof ip === 'string' ? ip.trim() : '';
+        if (!/^[0-9a-fA-F:.]{3,45}$/.test(address)) throw new Error('Invalid IP');
+        if (!controller.signal.aborted) setPublicIp(address);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPublicIp('Недоступен');
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -140,7 +165,15 @@ function BrowserCheck({ onVerified }) {
       <div className="syrex-guard-metadata" aria-label="Данные проверки">
         <div><span>Request ID:</span> <strong>{requestId}</strong></div>
         <div><span>Time:</span> <strong>{utc}</strong></div>
-        <div><span>IP:</span> <strong>скрыт</strong></div>
+        <div><span>IP:</span> <strong><button
+          type="button"
+          className="syrex-guard-ip-toggle"
+          data-revealed={ipVisible ? 'true' : 'false'}
+          aria-label={ipVisible ? 'Скрыть IP-адрес' : 'Показать IP-адрес'}
+          aria-pressed={ipVisible}
+          title={ipVisible ? 'Нажмите, чтобы скрыть IP' : 'Нажмите, чтобы показать IP'}
+          onClick={() => setIpVisible((value) => !value)}
+        ><span className="syrex-guard-ip-value">{publicIp}</span></button></strong></div>
       </div>
     </div>
   );

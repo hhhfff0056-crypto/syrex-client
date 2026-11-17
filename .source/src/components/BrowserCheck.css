@@ -141,3 +141,34 @@
 @media (prefers-reduced-motion: reduce) {
   .syrex-guard-spinner { animation-duration: 1.8s; }
 }
+
+/* Keep the guard's top-left branding invisible without shifting the grid. */
+.syrex-browser-guard > .syrex-guard-brand { visibility: hidden !important; }
+/* Public IP is blurred until the visitor clicks to reveal it. */
+.syrex-guard-ip-toggle {
+  display: inline-block;
+  max-width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0 2px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  text-align: center;
+  vertical-align: baseline;
+}
+.syrex-guard-ip-value { display: inline-block; transition: filter .2s ease; }
+.syrex-guard-ip-toggle[data-revealed="false"] .syrex-guard-ip-value {
+  filter: blur(6px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.syrex-guard-ip-toggle:hover { color: #fff; }
+.syrex-guard-ip-toggle:focus-visible {
+  outline: 2px solid #81b9ff;
+  outline-offset: 4px;
+  border-radius: 3px;
+}

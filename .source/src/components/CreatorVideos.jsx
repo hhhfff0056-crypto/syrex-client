@@ -5,8 +5,8 @@ import './CreatorVideos.css';
 const CreatorVideos = () => {
   const { t } = useLanguage();
   const videos = [
-    { id: 'dQw4w9WgXcQ', title: t.creators.video1Title },
-    { id: 'dQw4w9WgXcQ', title: t.creators.video2Title },
+    { id: '-fJqyQuIM4Y', title: t.creators.video1Title },
+    { id: 'oj7fNf7aaK4', title: t.creators.video2Title },
   ];
 
   return (

@@ -54,13 +54,9 @@ const Footer = () => {
                         <a href="mailto:syrexdlc@gmail.com" className="email-link">syrexdlc@gmail.com</a>
                     </div>
 
-                    <div className="footer-center-copyright">
-                        Syrex Client © All rights reserved
-                    </div>
+                    
 
-                    <div className="copyright">
-                        <p>{t.footer.rights}</p>
-                    </div>
+                    
                 </div>
 
             </div>
