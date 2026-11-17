@@ -51,11 +51,15 @@ jobs:
           cp .source/dist/index.html 404.html
           rm -rf assets
           cp -a .source/dist/assets ./assets
+          if [ -d .source/dist/cosmetics ]; then
+            rm -rf cosmetics
+            cp -a .source/dist/cosmetics ./cosmetics
+          fi
           if [ -f .source/dist/vite.svg ]; then cp .source/dist/vite.svg vite.svg; fi
           if [ -f .source/dist/syrex-logo.svg ]; then cp .source/dist/syrex-logo.svg syrex-logo.svg; fi
           if [ -f .source/dist/google0928336aa4d0307a.html ]; then cp .source/dist/google0928336aa4d0307a.html google0928336aa4d0307a.html; fi
           touch .nojekyll
-          git add index.html 404.html assets .nojekyll syrex-logo.svg google0928336aa4d0307a.html
+          git add index.html 404.html assets .nojekyll syrex-logo.svg google0928336aa4d0307a.html cosmetics
           if [ -f vite.svg ]; then git add vite.svg; fi
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
