@@ -79,7 +79,15 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(url, secret, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    // Read-only lookup only accepts UUIDs, and returns public cosmetic selections.
+    const token = (req.headers.get("authorization") || "").match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!token) return response({ error: "Войдите в Syrex" }, 401);
+    const publicClient = createClient(url, pub, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
+    if (authError || !user?.id) return response({ error: "Сеанс истёк" }, 401);
+
+    // Read-only lookup requires an authenticated Syrex account, and returns only equipped IDs.
     if (action === "lookup") {
       if (!Array.isArray(data.uuids) || data.uuids.length < 1 || data.uuids.length > 30) {
         return response({ error: "Укажите от 1 до 30 UUID" }, 400);
@@ -97,14 +105,6 @@ Deno.serve(async (req: Request) => {
         })),
       });
     }
-
-    const token = (req.headers.get("authorization") || "").match(/^Bearer\s+(.+)$/i)?.[1];
-    if (!token) return response({ error: "Войдите в Syrex" }, 401);
-    const publicClient = createClient(url, pub, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
-    if (authError || !user?.id) return response({ error: "Сеанс истёк" }, 401);
 
     const { data: existing, error: readError } = await admin.from("syrex_player_cosmetics")
       .select("player_uuid,equipped,selection_saved_at,updated_at")
