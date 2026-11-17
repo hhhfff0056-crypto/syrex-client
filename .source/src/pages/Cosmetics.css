@@ -1,22 +1,195 @@
-.syrex-cosmetics{min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#332700 0,transparent 65%),#090909;color:#f8f8f8;padding:110px 18px 70px;font-family:inherit}
-.syrex-cosmetics-wrap{max-width:890px;margin:0 auto}.syrex-cosmetics-back{color:#b6b6b6;border:0;background:transparent;display:flex;align-items:center;gap:8px;padding:0;margin:0 0 32px;cursor:pointer;font:inherit}.syrex-cosmetics-back:hover{color:#ffd200}
-.syrex-cosmetics-head{display:flex;align-items:center;gap:18px;margin-bottom:25px}
-.syrex-cosmetics-icon{width:58px;height:58px;background:#ffcc00;color:#151000;border-radius:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 36px #ffcc0038}
-.syrex-cosmetics h1{font-size:clamp(27px,4vw,40px);margin:0 0 6px;font-weight:750;letter-spacing:-.8px}
-.syrex-cosmetics-head p{color:#aaa;margin:0}
-.syrex-cosmetics-note{display:flex;gap:14px;align-items:flex-start;border:1px solid #5b4a18;background:#17150d;border-radius:15px;padding:17px 19px;color:#e8e0bd;margin:24px 0 22px}
-.syrex-cosmetics-note svg{color:#ffd200;flex-shrink:0}.syrex-cosmetics-note small{display:block;color:#aaa;font-size:12px;margin-top:7px;word-break:break-all}
-.syrex-cosmetics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.syrex-cosmetics-tile{display:flex;flex-direction:column;gap:11px;background:#141414;border:1px solid #303030;padding:21px;border-radius:16px}
-.syrex-cosmetics-label{font-weight:650;color:#f1f1f1;font-size:16px}
-.syrex-cosmetics select{width:100%;border:1px solid #4a4125;border-radius:10px;background:#202020;color:#f5f5f5;padding:12px;font:inherit;cursor:pointer}
-.syrex-cosmetics select:focus{outline:2px solid #ffd200;outline-offset:1px}
-.syrex-cosmetics-actions{display:flex;gap:13px;margin-top:26px;flex-wrap:wrap}
-.syrex-cosmetics-actions button{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 20px;border-radius:11px;border:1px solid #444;font:inherit;font-weight:650;cursor:pointer}
-.syrex-cosmetics-primary{background:#ffcb00;color:#151000;border-color:#ffcb00!important}
-.syrex-cosmetics-secondary{background:#202020;color:#ddd}
-.syrex-cosmetics-actions button:disabled{opacity:.6;cursor:wait}
-.syrex-cosmetics-status,.syrex-cosmetics-foot{color:#aaa}
-.syrex-cosmetics-foot{margin-top:24px;font-size:13px}
-.syrex-cosmetics-error{color:#ff8c8c}.syrex-cosmetics-success{color:#ffe172}
-@media(max-width:600px){.syrex-cosmetics{padding-top:90px}.syrex-cosmetics-grid{grid-template-columns:1fr}.syrex-cosmetics-head{align-items:flex-start}}
+.syrex-cosmetics {
+  min-height: 100vh;
+  color: #f6f5f1;
+  background:
+    radial-gradient(ellipse at 55% -10%, rgba(255, 204, 0, .13), transparent 47%),
+    radial-gradient(ellipse at 0% 62%, rgba(170, 132, 0, .045), transparent 40%),
+    #090909;
+  padding: 108px 22px 76px;
+  font-family: inherit;
+}
+.syrex-cosmetics-wrap { max-width: 1130px; margin: 0 auto; }
+.syrex-cosmetics-back {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 6px 0; margin: 0 0 31px; background: transparent;
+  color: #a8a8a8; border: 0; font: inherit; font-size: 14px; cursor: pointer;
+}
+.syrex-cosmetics-back:hover { color: #ffda26; }
+.syrex-cosmetics-head { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; }
+.syrex-cosmetics-icon {
+  width: 65px; height: 65px; flex: 0 0 65px;
+  display: grid; place-items: center; border-radius: 19px;
+  color: #131005; background: linear-gradient(140deg, #fff06a, #ffce00 70%, #e5a900);
+  box-shadow: 0 9px 34px rgba(255, 202, 0, .2);
+}
+.syrex-cosmetics h1 {
+  font-size: clamp(29px, 4vw, 42px); font-weight: 800;
+  letter-spacing: -1.25px; line-height: 1.15; margin: 0 0 7px;
+}
+.syrex-cosmetics-head p { color: #a8a8a8; font-size: 14px; margin: 0; line-height: 1.55; }
+.syrex-cosmetics-note {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 16px 19px; margin: 0 0 28px;
+  color: #d9d3bc; border: 1px solid #564718;
+  background: linear-gradient(110deg, rgba(255, 205, 0, .085), rgba(25, 23, 16, .7));
+  border-radius: 16px; font-size: 13px; line-height: 1.65;
+}
+.syrex-cosmetics-note svg { color: #f8cf16; flex-shrink: 0; margin-top: 2px; }
+.syrex-cosmetics-note small {
+  display: block; color: #9b957f; font-size: 12px; word-break: break-word; margin-top: 5px;
+}
+.syrex-cosmetics-tabs {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 11px; margin: 0 0 33px;
+}
+.syrex-cosmetics-tab {
+  appearance: none; border: 1px solid #303030; border-radius: 14px;
+  background: #151515; color: #c4c4c4; font: inherit;
+  min-height: 66px; padding: 14px 13px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  cursor: pointer; font-weight: 650; font-size: 14px; transition: .2s;
+}
+.syrex-cosmetics-tab svg { color: #acacac; flex-shrink: 0; }
+.syrex-cosmetics-tab:hover { color: #fff; border-color: #8a741e; background: #1a1914; }
+.syrex-cosmetics-tab.is-current {
+  background: linear-gradient(145deg, #ffdf35, #ffc600);
+  border-color: #ffe363; color: #171307;
+  box-shadow: 0 5px 24px rgba(255, 202, 0, .14);
+}
+.syrex-cosmetics-tab.is-current svg { color: #171307; }
+.syrex-cosmetics-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #f5c900; margin-left: 1px; flex-shrink: 0;
+}
+.syrex-cosmetics-tab.is-current .syrex-cosmetics-dot { background: #161207; }
+.syrex-gallery-heading {
+  display: flex; gap: 15px; align-items: center;
+  justify-content: space-between; margin-bottom: 19px;
+}
+.syrex-gallery-heading h2 { margin: 0 0 5px; font-size: 25px; letter-spacing: -.55px; font-weight: 750; }
+.syrex-gallery-heading p { margin: 0; color: #959595; font-size: 13px; }
+.syrex-cosmetics-clear {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid #393939; border-radius: 10px;
+  background: #1a1a1a; color: #d5d5d5;
+  padding: 10px 16px; font: inherit; font-size: 13px; cursor: pointer;
+}
+.syrex-cosmetics-clear:hover:not(:disabled) { border-color: #dbb82a; color: #ffe260; }
+.syrex-cosmetics-clear:disabled { cursor: default; opacity: .43; }
+.syrex-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 15px;
+}
+.syrex-gallery-card {
+  display: flex; flex-direction: column;
+  padding: 0; margin: 0; color: inherit;
+  overflow: hidden; text-align: left;
+  border: 1px solid #313131; border-radius: 17px;
+  background: #141414; cursor: pointer; font: inherit;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  min-width: 0;
+}
+.syrex-gallery-card:hover:not(:disabled) {
+  transform: translateY(-4px); border-color: #ac8b15;
+  box-shadow: 0 11px 27px rgba(0, 0, 0, .3);
+}
+.syrex-gallery-card.is-equipped {
+  border-color: #ffd31c; background: #1c1a12;
+  box-shadow: 0 0 0 1px rgba(255, 211, 28, .34), 0 8px 30px rgba(255, 191, 0, .06);
+}
+.syrex-gallery-card:focus-visible, .syrex-cosmetics-tab:focus-visible {
+  outline: 2px solid #fff0a1; outline-offset: 3px;
+}
+.syrex-gallery-card:disabled { cursor: wait; opacity: .74; }
+.syrex-gallery-media {
+  position: relative; width: 100%; min-height: 184px;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(circle at 50% 57%, rgba(255, 205, 0, .07), transparent 57%),
+    linear-gradient(145deg, #222221, #111112);
+  border-bottom: 1px solid #2e2e2e;
+}
+.syrex-gallery-card.is-equipped .syrex-gallery-media {
+  background: radial-gradient(circle at 50% 56%, rgba(255, 207, 0, .14), transparent 60%), #1a1811;
+}
+.syrex-gallery-preview {
+  width: 128px; height: 128px; flex: 0 0 128px;
+  background-repeat: no-repeat; background-size: 1664px 512px;
+  image-rendering: auto; transform: scale(1.07);
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .4));
+  transition: transform .2s;
+}
+.syrex-gallery-card:hover .syrex-gallery-preview { transform: scale(1.17); }
+.syrex-gallery-selected {
+  position: absolute; top: 12px; right: 11px;
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 8px; padding: 5px 8px;
+  background: #ffda20; color: #201800;
+  font-size: 11px; font-weight: 800;
+}
+.syrex-gallery-card-footer {
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 14px 14px 16px; min-height: 72px;
+}
+.syrex-gallery-card-name {
+  line-height: 1.28; font-size: 14px; font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.syrex-gallery-card-footer small { color: #858585; font-size: 11px; font-weight: 500; }
+.syrex-gallery-selection {
+  display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap;
+  margin-top: 24px; border: 1px solid #303030;
+  border-radius: 13px; padding: 15px 18px; background: #131313;
+}
+.syrex-gallery-selection-label { font-size: 12px; color: #9d9d9d; }
+.syrex-gallery-selection strong { font-size: 14px; color: #f8f6ea; }
+.syrex-gallery-unsaved { font-size: 12px; color: #ffd744; margin-left: auto; }
+.syrex-cosmetics-actions { display: flex; gap: 12px; margin: 20px 0 0; flex-wrap: wrap; }
+.syrex-cosmetics-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 9px; min-height: 47px; padding: 12px 21px;
+  border-radius: 11px; font: inherit; font-size: 14px;
+  font-weight: 750; cursor: pointer;
+}
+.syrex-cosmetics-primary {
+  border: 1px solid #ffd82d; background: linear-gradient(140deg, #ffe656, #ffc600);
+  color: #15110a; box-shadow: 0 6px 24px rgba(255, 199, 0, .1);
+}
+.syrex-cosmetics-primary:hover:not(:disabled) { filter: brightness(1.07); }
+.syrex-cosmetics-secondary { background: #1c1c1c; border: 1px solid #444; color: #e3e3e3; }
+.syrex-cosmetics-secondary:hover:not(:disabled) { border-color: #a88b26; }
+.syrex-cosmetics-actions button:disabled { opacity: .52; cursor: default; }
+.syrex-cosmetics-loading {
+  min-height: 180px; display: grid; place-items: center;
+  color: #b3b3b3; border: 1px solid #2d2d2d;
+  border-radius: 15px; background: #151515;
+}
+.syrex-cosmetics-error, .syrex-cosmetics-success {
+  padding: 12px 15px; border-radius: 10px; margin-top: 17px; font-size: 13px;
+}
+.syrex-cosmetics-error { color: #ffc4c4; background: #351a1a; }
+.syrex-cosmetics-success { color: #fff0ae; background: #282208; }
+.syrex-cosmetics-foot { color: #888; margin-top: 30px; font-size: 12px; line-height: 1.65; }
+@media (max-width: 740px) {
+  .syrex-cosmetics { padding: 93px 15px 60px; }
+  .syrex-cosmetics-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .syrex-cosmetics-tab { min-height: 57px; }
+  .syrex-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+  .syrex-gallery-media { min-height: 158px; }
+  .syrex-gallery-card-footer { padding: 12px; }
+}
+@media (max-width: 410px) {
+  .syrex-cosmetics { padding-left: 12px; padding-right: 12px; }
+  .syrex-cosmetics-head { align-items: flex-start; gap: 12px; }
+  .syrex-cosmetics-icon { width: 48px; height: 48px; flex-basis: 48px; border-radius: 13px; }
+  .syrex-cosmetics h1 { font-size: 27px; }
+  .syrex-cosmetics-tab { gap: 7px; font-size: 13px; padding: 11px 7px; }
+  .syrex-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .syrex-gallery-media { min-height: 142px; }
+  .syrex-gallery-preview { transform: scale(.92); }
+  .syrex-gallery-card:hover .syrex-gallery-preview { transform: scale(.97); }
+  .syrex-gallery-card-name { font-size: 12px; }
+  .syrex-gallery-heading h2 { font-size: 21px; }
+  .syrex-cosmetics-actions button { flex: 1 1 100%; }
+}
