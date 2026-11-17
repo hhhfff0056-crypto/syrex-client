@@ -3,17 +3,18 @@ import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 
 // Account-bound device licensing for Syrex. The client sends only SHA-256
 // of a stable, user-consented device identifier; raw hardware IDs never leave the PC.
-const allowedOrigin = "https://hhhfff0056-crypto.github.io";
-const headers = {
-  "Access-Control-Allow-Origin": allowedOrigin,
+const allowedOrigins = new Set([
+  "https://syrex.us.mw",
+  "https://www.syrex.us.mw",
+  "https://hhhfff0056-crypto.github.io"
+]);
+const baseHeaders = {
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json; charset=utf-8",
   "Cache-Control": "no-store",
   Vary: "Origin",
 };
-const json = (value: Record<string, unknown>, status = 200) =>
-  new Response(JSON.stringify(value), { status, headers });
 
 function envKey(jsonName: string, legacyName: string): string {
   try {
@@ -63,13 +64,19 @@ async function rateAllowed(admin: ReturnType<typeof createClient>, secret: strin
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
+  const headers = {
+    ...baseHeaders,
+    ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {})
+  };
+  const json = (value: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(value), { status, headers });
   if (req.method === "OPTIONS") {
-    return origin === allowedOrigin
+    return allowedOrigins.has(origin || "")
       ? new Response(null, { status: 204, headers })
       : json({ error: "Forbidden" }, 403);
   }
   // Browsers must use the published site. Native clients normally have no Origin header.
-  if (req.method !== "POST" || (origin && origin !== allowedOrigin)) {
+  if (req.method !== "POST" || (origin && !allowedOrigins.has(origin))) {
     return json({ error: "Недопустимый запрос." }, 403);
   }
   if (Number(req.headers.get("content-length") || 0) > 2048) {

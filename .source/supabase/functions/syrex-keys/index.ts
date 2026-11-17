@@ -3,22 +3,23 @@ import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 
 // This function handles license issuing/redemption, under server-enforced auth.
 // Never let browser-supplied roles or user IDs decide permission.
-const allowedOrigin = "https://hhhfff0056-crypto.github.io";
+const allowedOrigins = new Set([
+  "https://syrex.us.mw",
+  "https://www.syrex.us.mw",
+  "https://hhhfff0056-crypto.github.io"
+]);
 const bucketName = "syrex-client";
 const objectName = "SyrexClient.jar";
 const freeObjectName = "SyrexFree.jar";
 // Public Free edition: verified existing Dropbox shared link (dl=1 starts a download).
 const freeFallbackUrl = "https://www.dropbox.com/scl/fi/p637g4pv1qmgnk813ex6h/syrex_1.21.11.jar?rlkey=vbnt9irw8o2kcywr788k60th9&dl=1";
-const headers = {
-  "Access-Control-Allow-Origin": allowedOrigin,
+const baseHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
   "Content-Type": "application/json",
   "Cache-Control": "no-store",
   "Vary": "Origin",
 };
-const respond = (data: Record<string, unknown>, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers });
 const encoder = new TextEncoder();
 
 function envKey(jsonName: string, legacyName: string): string {
@@ -83,12 +84,20 @@ async function rateAllowed(admin: ReturnType<typeof createClient>, secret: strin
 }
 
 Deno.serve(async (req: Request) => {
+  const requestOrigin = req.headers.get("origin");
+  const headers = {
+    ...baseHeaders,
+    ...(requestOrigin && allowedOrigins.has(requestOrigin)
+      ? { "Access-Control-Allow-Origin": requestOrigin } : {})
+  };
+  const respond = (data: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers });
   if (req.method === "OPTIONS") {
-    return req.headers.get("origin") === allowedOrigin
+    return allowedOrigins.has(requestOrigin || "")
       ? new Response(null, { status: 204, headers })
       : respond({ error: "Forbidden" }, 403);
   }
-  if (req.method !== "POST" || req.headers.get("origin") !== allowedOrigin) {
+  if (req.method !== "POST" || !allowedOrigins.has(requestOrigin || "")) {
     return respond({ error: "Недопустимый запрос." }, 403);
   }
 

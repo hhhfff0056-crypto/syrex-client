@@ -2,17 +2,18 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 
 // Cosmetic IDs are public by design; account IDs, emails and tokens never go into lookups.
-const site = "https://hhhfff0056-crypto.github.io";
-const cors = {
-  "Access-Control-Allow-Origin": site,
+const allowedOrigins = new Set([
+  "https://syrex.us.mw",
+  "https://www.syrex.us.mw",
+  "https://hhhfff0056-crypto.github.io"
+]);
+const baseHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
   "Content-Type": "application/json; charset=utf-8",
   "Cache-Control": "no-store",
   "Vary": "Origin",
 };
-const response = (data: Record<string, unknown>, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: cors });
 const categories = new Set([
   "bodywear", "wings", "hat", "accessory", "pet", "cape", "sword", "mace", "shield",
 ]);
@@ -74,10 +75,16 @@ async function rateAllowed(admin: ReturnType<typeof createClient>, secret: strin
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
-  if (req.method === "OPTIONS") return origin === site
+  const cors = {
+    ...baseHeaders,
+    ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {})
+  };
+  const response = (data: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: cors });
+  if (req.method === "OPTIONS") return allowedOrigins.has(origin || "")
     ? new Response(null, { status: 204, headers: cors })
     : response({ error: "Forbidden" }, 403);
-  if (req.method !== "POST" || (origin && origin !== site)) {
+  if (req.method !== "POST" || (origin && !allowedOrigins.has(origin))) {
     return response({ error: "Недопустимый запрос" }, 403);
   }
   if (Number(req.headers.get("content-length") || 0) > 4096) {

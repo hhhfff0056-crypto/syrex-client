@@ -3,17 +3,18 @@ import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 // Syrex's independent, server-checked arithmetic CAPTCHA.
 // No third-party CAPTCHA keys are needed. This is an anti-spam speed bump,
 // NOT a replacement for native Supabase Auth abuse protection.
-const origin = 'https://hhhfff0056-crypto.github.io';
-const headers = {
-  'Access-Control-Allow-Origin': origin,
+const allowedOrigins = new Set([
+  'https://syrex.us.mw',
+  'https://www.syrex.us.mw',
+  'https://hhhfff0056-crypto.github.io'
+]);
+const baseHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'content-type, apikey',
   'Vary': 'Origin',
   'Cache-Control': 'no-store',
   'Content-Type': 'application/json'
 };
-const json = (data: Record<string, unknown>, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers });
 const encoder = new TextEncoder();
 
 function getKeyMaterial(): string | null {
@@ -73,8 +74,20 @@ async function rateAllowed(admin: ReturnType<typeof createClient>, secret: strin
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
-  if (req.headers.get('origin') !== origin) return json({ error: 'Forbidden origin' }, 403);
+  const requestOrigin = req.headers.get('origin');
+  const headers = {
+    ...baseHeaders,
+    ...(requestOrigin && allowedOrigins.has(requestOrigin)
+      ? { 'Access-Control-Allow-Origin': requestOrigin } : {})
+  };
+  const json = (data: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers });
+  if (req.method === 'OPTIONS') {
+    return allowedOrigins.has(requestOrigin || '')
+      ? new Response(null, { status: 204, headers })
+      : json({ error: 'Forbidden origin' }, 403);
+  }
+  if (!allowedOrigins.has(requestOrigin || '')) return json({ error: 'Forbidden origin' }, 403);
   const mode = new URL(req.url).searchParams.get('mode');
   if (Number(req.headers.get('content-length') || 0) > 2048) return json({ error: 'Request too large' }, 413);
   if ((mode === 'challenge' && req.method === 'GET') || (mode === 'verify' && req.method === 'POST')) {

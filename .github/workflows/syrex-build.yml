@@ -31,8 +31,7 @@ jobs:
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY || '' }}
         working-directory: .source
         run: |
-          sed -i 's/<BrowserRouter>/<BrowserRouter basename="\/syrex-client">/' src/main.jsx
-          npm run build -- --base=/syrex-client/
+          npm run build -- --base=/
       - name: Obfuscate client-side JavaScript
         working-directory: .source
         run: |
