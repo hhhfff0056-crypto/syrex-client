@@ -18,7 +18,7 @@ const SupabaseProfile = () => {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [license, setLicense] = useState(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -44,21 +44,26 @@ const SupabaseProfile = () => {
     navigate('/', { replace: true });
   };
 
-  const download = async () => {
+  const download = async (edition) => {
     if (downloading || !license) return;
-    const available = license.active
+    const premium = edition === 'premium';
+    if (premium && !license.active) {
+      navigate('/keys');
+      return;
+    }
+    const available = premium
       ? (license.premiumFileReady ?? license.fileReady)
       : license.freeFileReady;
     if (!available) return;
-    setDownloading(true);
+    setDownloading(edition);
     setError('');
     try {
-      if (license.active) await downloadLicensedClient();
+      if (premium) await downloadLicensedClient();
       else await downloadFreeClient();
     } catch (err) {
       setError(err.message);
     } finally {
-      setDownloading(false);
+      setDownloading('');
     }
   };
 
@@ -125,19 +130,33 @@ const SupabaseProfile = () => {
                     ? license.isDeveloper ? 'Версия: Premium · DEV' : license.expiresAt ? 'Premium до ' + new Date(license.expiresAt).toLocaleDateString('ru-RU') : 'Premium навсегда'
                     : 'Версия: Free — без подписки'}</span>
                 </div>
-                <button
-                  className="btn-trial admin-btn download-btn profile-action-btn"
-                  type="button"
-                  onClick={download}
-                  disabled={downloading || !license || !(license.active ? (license.premiumFileReady ?? license.fileReady) : license.freeFileReady)}
-                >
-                  <Download size={16} /> {downloading
-                    ? 'Получаем файл…'
-                    : !license ? 'Проверяем версию…'
-                    : !(license.active ? (license.premiumFileReady ?? license.fileReady) : license.freeFileReady)
-                      ? license.active ? 'Premium ещё не загружен' : 'Free ещё не загружен'
-                      : license.active ? 'Скачать Premium' : 'Скачать Free'}
-                </button>
+                <div className="profile-editions" aria-label="Скачать клиент Syrex">
+                  <div className="profile-edition profile-edition-free">
+                    <div className="profile-edition-heading"><span>FREE</span><small>Бесплатная версия</small></div>
+                    <button
+                      className="btn-trial admin-btn download-btn profile-action-btn profile-edition-button"
+                      type="button"
+                      onClick={() => download('free')}
+                      disabled={!!downloading || !license?.freeFileReady}
+                    >
+                      <Download size={16} /> {downloading === 'free' ? 'Получаем Free…' : 'Скачать Free'}
+                    </button>
+                    {license && !license.freeFileReady && <small className="profile-edition-hint">Файл Free пока недоступен.</small>}
+                  </div>
+                  <div className="profile-edition profile-edition-premium">
+                    <div className="profile-edition-heading"><span>PREMIUM</span><small>{license?.active ? 'Подписка активна' : 'Требуется подписка'}</small></div>
+                    <button
+                      className="btn-trial admin-btn download-btn profile-action-btn profile-edition-button"
+                      type="button"
+                      onClick={() => download('premium')}
+                      disabled={!!downloading || !license || (license.active && !(license.premiumFileReady ?? license.fileReady))}
+                    >
+                      <Download size={16} /> {downloading === 'premium' ? 'Получаем Premium…' : 'Скачать Premium'}
+                    </button>
+                    {!license?.active && <small className="profile-edition-hint">Нажмите, чтобы активировать ключ.</small>}
+                    {license?.active && !(license.premiumFileReady ?? license.fileReady) && <small className="profile-edition-hint">Файл Premium пока не загружен.</small>}
+                  </div>
+                </div>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
                   <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : license?.active ? 'Моя лицензия Premium' : 'Перейти на Premium'}
                 </button>

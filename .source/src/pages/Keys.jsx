@@ -81,11 +81,18 @@ const Keys = () => {
     }
   };
 
-  const download = async () => {
+  const download = async (edition) => {
     if (busy || !status) return;
-    setBusy('download'); setError('');
+    if (edition === 'premium' && !status.active) {
+      setError('');
+      setNotice('Для скачивания Premium сначала активируйте ключ ниже.');
+      document.getElementById('syrex-license-key')?.focus();
+      return;
+    }
+    setBusy('download-' + edition);
+    setError('');
     try {
-      if (status.active) await downloadLicensedClient();
+      if (edition === 'premium') await downloadLicensedClient();
       else await downloadFreeClient();
     } catch (err) {
       setError(err.message);
@@ -125,18 +132,24 @@ const Keys = () => {
               status.active ? 'Подписка Premium: ' + (status.expiresAt ? 'до ' + formatDate(status.expiresAt) : 'навсегда') :
               'Бесплатный доступ без подписки. Для Premium активируйте ключ ниже.'}</p>
           </div>
-          <button
-            className="keys-primary"
-            type="button"
-            disabled={busy !== '' || !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady)}
-            onClick={download}
-          >
-            <Download size={17} />
-            {busy === 'download' ? 'Получаем файл…'
-              : !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady)
-                ? status.active ? 'Premium ещё не загружен' : 'Free ещё не загружен'
-                : status.active ? 'Скачать Premium' : 'Скачать Free'}
-          </button>
+          <div className="keys-download-buttons" aria-label="Выбор версии Syrex">
+            <button
+              className="keys-primary keys-download-free"
+              type="button"
+              disabled={busy !== '' || !status.freeFileReady}
+              onClick={() => download('free')}
+            >
+              <Download size={17} /> {busy === 'download-free' ? 'Получаем Free…' : 'Скачать Free'}
+            </button>
+            <button
+              className="keys-primary keys-download-premium"
+              type="button"
+              disabled={busy !== '' || (status.active && !(status.premiumFileReady ?? status.fileReady))}
+              onClick={() => download('premium')}
+            >
+              <Download size={17} /> {busy === 'download-premium' ? 'Получаем Premium…' : 'Скачать Premium'}
+            </button>
+          </div>
         </div>}
 
         {status && !status.active && <form className="keys-panel keys-redeem" onSubmit={redeem}>
@@ -144,7 +157,7 @@ const Keys = () => {
           <h2>Введите ключ</h2>
           <p>Free доступен и без ключа. Ключ одноразовый и открывает Premium на выбранный срок.</p>
           <div className="keys-form-line">
-            <input value={key} onChange={(e) => setKey(e.target.value.toUpperCase().slice(0, 38))} required autoComplete="off" spellCheck="false" placeholder="SYREX-XXXXX-XXXXX-XXXXX-XXXXX" aria-label="Ключ активации" />
+            <input id="syrex-license-key" value={key} onChange={(e) => setKey(e.target.value.toUpperCase().slice(0, 38))} required autoComplete="off" spellCheck="false" placeholder="SYREX-XXXXX-XXXXX-XXXXX-XXXXX" aria-label="Ключ активации" />
             <button className="keys-primary" type="submit" disabled={busy !== '' || !key.trim()}>{busy === 'redeem' ? 'Проверяем…' : 'Активировать'}</button>
           </div>
         </form>}
@@ -189,11 +202,8 @@ const Keys = () => {
             </div>)}
           </div> : <p className="keys-muted">Пока нет выпущенных ключей.</p>}
         </div>}
-        {status && !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady) && <p className="keys-footnote">
-          {status.active
-            ? 'Для скачивания Premium администратору нужно загрузить SyrexClient.jar в закрытое хранилище Supabase.'
-            : 'Для скачивания Free администратору нужно загрузить SyrexFree.jar в закрытое хранилище Supabase.'}
-        </p>}
+        {status && !status.freeFileReady && <p className="keys-footnote">Для скачивания Free файл пока не доступен администратором.</p>}
+        {status?.active && !(status.premiumFileReady ?? status.fileReady) && <p className="keys-footnote">Для скачивания Premium администратору нужно загрузить SyrexClient.jar в закрытое хранилище Supabase.</p>}
       </div>
     </motion.section>
   );

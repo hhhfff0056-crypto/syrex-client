@@ -41,3 +41,10 @@
 .keys-history-row .unused{color:#69cb93}
 .keys-footnote,.keys-muted{text-align:center;color:var(--text-secondary);font-size:12px;line-height:1.7}
 @media(max-width:600px){.keys-page{padding:98px 0 44px}.keys-container{padding:0 14px}.keys-panel{padding:18px}.keys-status{align-items:stretch;flex-direction:column}.keys-form-line{flex-direction:column}.keys-form-line input{width:100%}.keys-issued-header{align-items:flex-start;flex-direction:column}}
+
+/* Separate Free and Premium controls; both remain visible to all signed-in users. */
+.keys-download-buttons{display:flex;flex-direction:column;gap:9px;min-width:180px}
+.keys-download-buttons .keys-primary{width:100%}
+.keys-download-free{background:transparent;border:1px solid rgba(212,175,55,.5);color:var(--text-primary)}
+.keys-download-free:hover:not(:disabled){background:rgba(212,175,55,.08)}
+@media(max-width:600px){.keys-download-buttons{width:100%}}
