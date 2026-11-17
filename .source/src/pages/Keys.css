@@ -1,0 +1,43 @@
+.keys-page {min-height:calc(100vh - 90px);padding:116px 0 70px;position:relative;background:radial-gradient(ellipse at 50% 5%,rgba(212,175,55,.065),transparent 50%)}
+.keys-container {width:min(100%,820px);margin:auto;display:flex;flex-direction:column;gap:22px}
+.keys-back {display:flex;align-items:center;gap:8px;color:var(--text-secondary);text-decoration:none;font-size:13px;width:max-content}
+.keys-back:hover {color:var(--text-primary)}
+.keys-heading {text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
+.keys-heading-icon {width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);color:#d4af37}
+.keys-heading h1{font-size:clamp(27px,5vw,37px);color:var(--text-primary);line-height:1.3}
+.keys-heading p{color:var(--text-secondary);max-width:570px;line-height:1.6;font-size:14px}
+.keys-panel{border:1px solid rgba(212,175,55,.2);border-radius:18px;background:var(--glass-bg);padding:26px;box-shadow:0 14px 40px rgba(0,0,0,.07)}
+.keys-panel-label{display:flex;align-items:center;gap:7px;color:#d2ad49;text-transform:uppercase;font-size:11px;font-weight:750;letter-spacing:.09em;margin-bottom:10px}
+.keys-panel h2{font-size:20px;color:var(--text-primary);margin-bottom:8px}
+.keys-panel p{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.keys-status{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.keys-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:linear-gradient(135deg,#dbb648,#a98426);border:0;border-radius:11px;min-height:43px;color:#16140d;font-weight:750;font-size:13px;padding:11px 18px;white-space:normal}
+.keys-primary:hover:not(:disabled){filter:brightness(1.07)}
+.keys-primary:disabled{opacity:.46;cursor:not-allowed}
+.keys-form-line{display:flex;gap:10px;margin-top:17px}
+.keys-form-line input,.keys-dev-form select,.keys-issued textarea{border:1px solid rgba(212,175,55,.28);outline:none;background:var(--glass-bg);color:var(--text-primary);border-radius:11px;padding:12px 13px;font-family:inherit}
+.keys-form-line input:focus,.keys-dev-form select:focus{border-color:#d4af37}
+.keys-form-line input{flex:1;min-width:0;letter-spacing:.05em;font-size:13px}
+.keys-error,.keys-notice{padding:12px 15px;border-radius:11px;font-size:13px;line-height:1.55}
+.keys-error{color:#ff9595;background:rgba(220,57,57,.11);border:1px solid rgba(220,57,57,.25)}
+.keys-notice{color:#71dba1;background:rgba(36,162,98,.09);border:1px solid rgba(36,162,98,.25)}
+.keys-dev-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:18px}
+.keys-dev-form label{display:flex;flex:1;min-width:118px;flex-direction:column;gap:7px;font-size:12px;color:var(--text-secondary)}
+.keys-dev-form select{width:100%;min-height:43px}
+.keys-dev-form option{background:#181818;color:#eee}
+.keys-issued{margin-top:24px;padding:17px;border:1px solid rgba(212,175,55,.24);border-radius:13px}
+.keys-issued-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.keys-issued-header strong{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary)}
+.keys-copy,.keys-history-heading button{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:0;background:transparent;color:#d4af37;font-size:12px}
+.keys-issued textarea{width:100%;resize:vertical;line-height:1.75;font-size:13px;letter-spacing:.05em}
+.keys-history-heading{display:flex;align-items:center;justify-content:space-between;margin:26px 0 10px}
+.keys-history-heading h3{font-size:16px;color:var(--text-primary)}
+.keys-history-row{display:flex;gap:10px;justify-content:space-between;align-items:center;border-top:1px solid var(--glass-border);padding:12px 0}
+.keys-history-row>div{display:flex;flex-direction:column;gap:5px}
+.keys-history-row strong{font-size:12px;color:var(--text-primary)}
+.keys-history-row small{color:var(--text-secondary);font-size:11px}
+.keys-history-row span{font-size:11px;white-space:nowrap}
+.keys-history-row .used{color:var(--text-secondary)}
+.keys-history-row .unused{color:#69cb93}
+.keys-footnote,.keys-muted{text-align:center;color:var(--text-secondary);font-size:12px;line-height:1.7}
+@media(max-width:600px){.keys-page{padding:98px 0 44px}.keys-container{padding:0 14px}.keys-panel{padding:18px}.keys-status{align-items:stretch;flex-direction:column}.keys-form-line{flex-direction:column}.keys-form-line input{width:100%}.keys-issued-header{align-items:flex-start;flex-direction:column}}

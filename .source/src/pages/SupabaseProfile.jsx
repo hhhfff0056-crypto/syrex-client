@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound } from 'lucide-react';
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
+import { downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
 import './Profile.css';
 import './SupabaseProfile.css';
 
@@ -16,6 +17,8 @@ const SupabaseProfile = () => {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [license, setLicense] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -27,6 +30,7 @@ const SupabaseProfile = () => {
       }
       setAccount(user);
       setAuthItemAuto('authUser', String(user.app_metadata?.role || 'DEFAULT'));
+      getLicenseStatus().then((state) => { if (active) setLicense(state); }).catch((err) => { if (active) setError(err.message); });
     }).catch((err) => {
       if (active) setError(err.message || 'Не удалось проверить аккаунт.');
     }).finally(() => {
@@ -38,6 +42,19 @@ const SupabaseProfile = () => {
   const logout = async () => {
     await signOut();
     navigate('/', { replace: true });
+  };
+
+  const download = async () => {
+    if (downloading || !license?.active || !license?.fileReady) return;
+    setDownloading(true);
+    setError('');
+    try {
+      await downloadLicensedClient();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const askReset = () => {
@@ -99,10 +116,15 @@ const SupabaseProfile = () => {
                 <div className="profile-tags">
                   <span className={`tag-pill role-badge ${accountRole === 'DEV' ? 'dev-role' : ''}`}><ShieldCheck size={13} /> {accountRole}</span>
                   <span className="tag-pill"><ShieldCheck size={13} /> Аккаунт подтверждён</span>
-                  <span className="tag-pill muted">Подписка: не подключена</span>
+                  <span className="tag-pill muted">{license?.active
+                    ? license.isDeveloper ? 'Доступ DEV' : license.expiresAt ? 'Лицензия до ' + new Date(license.expiresAt).toLocaleDateString('ru-RU') : 'Лицензия навсегда'
+                    : 'Ключ не активирован'}</span>
                 </div>
-                <button className="btn-trial admin-btn download-btn profile-action-btn" type="button" disabled title="Для скачивания нужен сервер подписок">
-                  <Download size={16} /> Скачать клиент
+                <button className="btn-trial admin-btn download-btn profile-action-btn" type="button" onClick={download} disabled={downloading || !license?.active || !license?.fileReady}>
+                  <Download size={16} /> {downloading ? 'Получаем файл…' : !license?.active ? 'Скачивание закрыто' : !license?.fileReady ? 'Файл пока не загружен' : 'Скачать клиент'}
+                </button>
+                <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
+                  <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : 'Активировать ключ'}
                 </button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={askReset} disabled={busy}>
                   <KeyRound size={16} /> {busy ? 'Отправляем...' : 'Сменить пароль'}
@@ -119,7 +141,7 @@ const SupabaseProfile = () => {
                   <div className="profile-row"><span><ShieldCheck size={14} /> Роль</span><strong>{accountRole}</strong></div>
                   <div className="profile-row"><span><Calendar size={14} /> Дата регистрации</span><strong>{joinedAt}</strong></div>
                 </div>
-                <p className="auth-profile-hint">Аккаунт работает через Supabase Auth. Подписки, ключи и загрузки будут доступны после подключения серверной части Syrex. Аватар пока хранится только в этом браузере.</p>
+                <p className="auth-profile-hint">Доступ к клиенту выдаётся после активации одноразового ключа. Скачивание защищено закрытым хранилищем Supabase. Аватар пока хранится только в этом браузере.</p>
                 {error && <div className="login-error" role="alert">{error}</div>}
                 {notice && <div className="auth-success" role="status">{notice}</div>}
               </div>
