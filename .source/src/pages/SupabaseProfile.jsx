@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound } from 'lucide-react';
+import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound, Sparkles } from 'lucide-react';
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
 import { downloadFreeClient, downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
@@ -161,6 +161,7 @@ const SupabaseProfile = () => {
                     {license?.active && !(license.premiumFileReady ?? license.fileReady) && <small className="profile-edition-hint">Файл Premium пока не загружен.</small>}
                   </div>
                 </div>
+                <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/cosmetics')}><Sparkles size={16} /> Моя косметика</button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
                   <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : license?.active ? 'Моя лицензия Premium' : 'Перейти на Premium'}
                 </button>
