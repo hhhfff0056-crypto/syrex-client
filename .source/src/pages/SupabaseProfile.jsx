@@ -26,6 +26,7 @@ const SupabaseProfile = () => {
         return;
       }
       setAccount(user);
+      setAuthItemAuto('authUser', String(user.app_metadata?.role || 'DEFAULT'));
     }).catch((err) => {
       if (active) setError(err.message || 'Не удалось проверить аккаунт.');
     }).finally(() => {
@@ -67,6 +68,7 @@ const SupabaseProfile = () => {
   };
 
   const displayName = account?.user_metadata?.username || account?.email?.split('@')[0] || 'User';
+  const accountRole = String(account?.app_metadata?.role || 'USER').toUpperCase();
   const joinedAt = account?.created_at ? new Date(account.created_at).toLocaleDateString('ru-RU') : '—';
 
   return (
@@ -95,6 +97,7 @@ const SupabaseProfile = () => {
                 </div>
                 <div className="profile-uid">UID: {account.id}</div>
                 <div className="profile-tags">
+                  <span className={`tag-pill role-badge ${accountRole === 'DEV' ? 'dev-role' : ''}`}><ShieldCheck size={13} /> {accountRole}</span>
                   <span className="tag-pill"><ShieldCheck size={13} /> Аккаунт подтверждён</span>
                   <span className="tag-pill muted">Подписка: не подключена</span>
                 </div>
@@ -113,6 +116,7 @@ const SupabaseProfile = () => {
                 <div className="profile-list">
                   <div className="profile-row"><span><UserCircle size={14} /> Никнейм</span><strong>{displayName}</strong></div>
                   <div className="profile-row"><span><Mail size={14} /> Email</span><strong>{account.email}</strong></div>
+                  <div className="profile-row"><span><ShieldCheck size={14} /> Роль</span><strong>{accountRole}</strong></div>
                   <div className="profile-row"><span><Calendar size={14} /> Дата регистрации</span><strong>{joinedAt}</strong></div>
                 </div>
                 <p className="auth-profile-hint">Аккаунт работает через Supabase Auth. Подписки, ключи и загрузки будут доступны после подключения серверной части Syrex. Аватар пока хранится только в этом браузере.</p>

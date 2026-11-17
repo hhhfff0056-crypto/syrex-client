@@ -18,3 +18,14 @@
 }
 .auth-profile-hint + .login-error, .auth-profile-hint + .auth-success { margin-top: 18px; }
 .profile-uid { overflow-wrap: anywhere; }
+
+.profile-tags .role-badge {
+  font-weight: 700;
+  letter-spacing: 0.045em;
+}
+.profile-tags .dev-role {
+  border: 1px solid rgba(244,190,58,.55);
+  background: rgba(244,190,58,.15);
+  color: #f3c75c;
+}
+[data-theme="light"] .profile-tags .dev-role { color: #78520b; }

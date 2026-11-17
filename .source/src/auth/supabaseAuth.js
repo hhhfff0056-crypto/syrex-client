@@ -74,7 +74,7 @@ const persistSession = (result, remember) => {
     authToken: result.access_token,
     refreshToken: result.refresh_token,
     authExpiresAt: String(expiry),
-    authUser: 'DEFAULT',
+    authUser: String(user.app_metadata?.role || 'DEFAULT'),
     userId: String(user.id),
     username: String(user.user_metadata?.username || user.email?.split('@')[0] || 'User'),
     userEmail: String(user.email || '')
