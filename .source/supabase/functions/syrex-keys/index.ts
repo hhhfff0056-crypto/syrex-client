@@ -7,6 +7,8 @@ const allowedOrigin = "https://hhhfff0056-crypto.github.io";
 const bucketName = "syrex-client";
 const objectName = "SyrexClient.jar";
 const freeObjectName = "SyrexFree.jar";
+// Public source supplied by the Syrex owner; replace with a Dropbox public URL when available.
+const freeFallbackUrl = "https://drive.google.com/uc?export=download&id=19RjjDRApK5v09zwbZv_39SvEtKO0k0-Y";
 const headers = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -104,7 +106,8 @@ Deno.serve(async (req: Request) => {
       });
       if (storageError) throw storageError;
       const premiumFileReady = Boolean(objects?.some((item) => item.name === objectName));
-      const freeFileReady = Boolean(objects?.some((item) => item.name === freeObjectName));
+      const storedFreeFileReady = Boolean(objects?.some((item) => item.name === freeObjectName));
+      const freeFileReady = storedFreeFileReady || Boolean(freeFallbackUrl);
 
       if (action === "status") {
         return respond({
@@ -119,6 +122,7 @@ Deno.serve(async (req: Request) => {
       const isFreeDownload = action === "download-free";
       if (!isFreeDownload && !active) return respond({ error: "Для Premium требуется активная подписка." }, 403);
       if (isFreeDownload && !freeFileReady) return respond({ error: "Бесплатная версия ещё не загружена администратором." }, 404);
+      if (isFreeDownload && !storedFreeFileReady) return respond({ url: freeFallbackUrl, external: true });
       if (!isFreeDownload && !premiumFileReady) return respond({ error: "Premium-версия ещё не загружена администратором." }, 404);
       const downloadName = isFreeDownload ? freeObjectName : objectName;
       const { data, error: linkError } = await admin.storage.from(bucketName)
