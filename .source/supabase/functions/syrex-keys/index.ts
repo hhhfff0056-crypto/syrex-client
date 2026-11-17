@@ -8,7 +8,7 @@ const bucketName = "syrex-client";
 const objectName = "SyrexClient.jar";
 const freeObjectName = "SyrexFree.jar";
 // Public Free edition: verified existing Dropbox shared link (dl=1 starts a download).
-const freeFallbackUrl = "https://www.dropbox.com/scl/fi/ptjoaft0f70v5l9c110s2/Syrex-Sword-1.21.11.jar?rlkey=7hji9ywpejozagfwmq2wqjqf2&dl=1";
+const freeFallbackUrl = "https://www.dropbox.com/scl/fi/p637g4pv1qmgnk813ex6h/syrex_1.21.11.jar?rlkey=vbnt9irw8o2kcywr788k60th9&dl=1";
 const headers = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
