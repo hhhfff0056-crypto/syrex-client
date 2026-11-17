@@ -23,6 +23,34 @@ import Admin from './pages/Admin';
 import { useLanguage } from './context/LanguageContext';
 import { api } from './api';
 import { getAuthItem, setAuthItemAuto } from './utils/authStorage';
+import { getCurrentUser } from './auth/supabaseAuth';
+
+function VerifiedAdminRoute() {
+  const navigate = useNavigate();
+  const [access, setAccess] = React.useState('checking');
+  React.useEffect(() => {
+    let active = true;
+    getCurrentUser().then((user) => {
+      if (!active) return;
+      const role = String(user?.app_metadata?.role || '').toUpperCase();
+      if (user && ['ADMIN', 'DEV', 'DEVELOPER'].includes(role)) {
+        setAccess('granted');
+      } else {
+        setAccess('denied');
+      }
+    }).catch(() => {
+      if (active) setAccess('denied');
+    });
+    return () => { active = false; };
+  }, []);
+  React.useEffect(() => {
+    if (access === 'denied') navigate('/profile', { replace: true });
+  }, [access, navigate]);
+  if (access === 'checking') return <main role="status" style={{ padding: '8rem 2rem', textAlign: 'center' }}>Проверяем права доступа...</main>;
+  if (access !== 'granted') return null;
+  return <Admin />;
+}
+
 
 const Home = () => (
   <main>
@@ -148,7 +176,7 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/policy" element={<Privacy />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<VerifiedAdminRoute />} />
       </Routes>
       {!hideFooter && <Footer />}
     </motion.div>
