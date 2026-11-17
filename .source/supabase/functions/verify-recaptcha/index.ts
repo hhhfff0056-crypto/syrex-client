@@ -3,7 +3,7 @@
 const allowedOrigin = "https://hhhfff0056-crypto.github.io";
 const headers = {
   "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "content-type, apikey",
   "Vary": "Origin",
   "Content-Type": "application/json",
@@ -15,9 +15,9 @@ const reply = (data: Record<string, unknown>, status = 200) =>
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (req.headers.get("origin") !== allowedOrigin) return reply({ error: "Origin not allowed" }, 403);
-  if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
-
   const secret = Deno.env.get("RECAPTCHA_SECRET_KEY");
+  if (req.method === "GET") return reply({ ready: Boolean(secret) });
+  if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
   if (!secret) return reply({ error: "reCAPTCHA is not configured on the server" }, 503);
 
   let token = "";

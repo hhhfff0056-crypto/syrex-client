@@ -3,12 +3,15 @@ import { Lock, Mail, User, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authConfigured, register as registerAccount } from '../auth/supabaseAuth';
-import GoogleRecaptcha, { captchaEnabled } from '../components/GoogleRecaptcha';
+import GoogleRecaptcha, { useCaptchaStatus } from '../components/GoogleRecaptcha';
 import './Login.css';
 import './auth.css';
 
 const Register = () => {
   const navigate = useNavigate();
+  const captchaStatus = useCaptchaStatus();
+  const captchaEnabled = captchaStatus === 'ready';
+  const captchaUnavailable = captchaStatus === 'checking' || captchaStatus === 'error';
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +26,10 @@ const Register = () => {
   const submit = async (event) => {
     event.preventDefault();
     if (!authConfigured || working) return;
+    if (captchaUnavailable) {
+      setError('Проверка reCAPTCHA недоступна. Обновите страницу.');
+      return;
+    }
     setError('');
     setNotice('');
     if (username.trim().length < 3) return setError('Никнейм должен содержать минимум 3 символа.');
@@ -91,9 +98,10 @@ const Register = () => {
               </div>
             </label>
             {captchaEnabled && <GoogleRecaptcha ref={captchaRef} onTokenChange={setCaptchaToken} />}
+            {captchaStatus === 'error' && <div className="login-error" role="alert">Не удалось связаться с сервером проверки reCAPTCHA.</div>}
             {error && <div className="login-error" role="alert">{error}</div>}
             {notice && <div className="auth-success" role="status">{notice}</div>}
-            <button className="btn-hero-primary login-submit" type="submit" disabled={!authConfigured || working || !!notice || (captchaEnabled && !captchaToken)}>{working ? 'Создаём...' : 'Зарегистрироваться'}</button>
+            <button className="btn-hero-primary login-submit" type="submit" disabled={!authConfigured || working || !!notice || captchaUnavailable || (captchaEnabled && !captchaToken)}>{working ? 'Создаём...' : 'Зарегистрироваться'}</button>
             <div className="login-footer">
               <span>Уже есть аккаунт?</span>
               <Link to="/login">Войти</Link>

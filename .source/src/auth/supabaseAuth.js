@@ -11,8 +11,9 @@ export const authConfigured = /^https:\/\/[^/]+$/i.test(baseUrl) && key.startsWi
 const recaptchaEnabled = Boolean((import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim());
 
 const verifyRecaptcha = async (captchaToken) => {
-  if (!recaptchaEnabled) return;
-  if (!captchaToken) throw new Error('Подтвердите, что вы не робот.');
+  // Forms require a token only after the server reports that its secret is set.
+  // Without the server secret, users can still sign in normally.
+  if (!recaptchaEnabled || !captchaToken) return;
   let response;
   try {
     response = await fetch(baseUrl + '/functions/v1/verify-recaptcha', {

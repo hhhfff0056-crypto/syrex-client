@@ -31,8 +31,8 @@
 
 Syrex использует Google reCAPTCHA v2 (чекбокс «Я не робот») для форм входа,
 регистрации и восстановления пароля. Google-токены проверяет серверная Supabase
-Edge Function `verify-recaptcha`. Пока нет реального site key, компонент не
-отображается и существующая авторизация остаётся без CAPTCHA-защиты.
+Edge Function `verify-recaptcha`. Публичный site key уже указан, однако виджет включается только когда
+сервер сообщает, что секрет установлен в защищённых настройках Supabase.
 
 ### Настройка
 
@@ -40,13 +40,17 @@ Edge Function `verify-recaptcha`. Пока нет реального site key, �
    [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/create).
    Разрешённый домен: `hhhfff0056-crypto.github.io`, без `https://` и
    без `/syrex-client/`.
-2. Публичный **Site Key** добавьте в GitHub: Settings → Secrets and variables →
-   Actions → Variables → `VITE_RECAPTCHA_SITE_KEY`. В этой переменной только публичный ключ.
+2. Публичный **Site Key** уже добавлен в GitHub Actions как запасное значение
+   `VITE_RECAPTCHA_SITE_KEY`; публичную переменную можно переопределить в
+   Settings → Secrets and variables → Actions → Variables.
 3. Секретный **Secret Key** внесите **только** в Supabase Dashboard:
-   Edge Functions → Secrets → создать `RECAPTCHA_SECRET_KEY`. Никогда не
-   добавляйте секретный ключ в GitHub, исходники сайта или переписку.
-4. Запустите публикацию заново, изменив файл в `.source/` или в workflow.
-   После сборки на страницах входа и регистрации появится капча.
+   Edge Functions → Secrets → создать `RECAPTCHA_SECRET_KEY`. Скриншот,
+   содержавший секрет, был опубликован в переписке: безопаснее перевыпустить
+   ключ в Google и сохранить обновлённый секрет в Supabase.
+4. Сервер `verify-recaptcha` возвращает безопасный статус `ready`, без
+   значения секрета. После сохранения секрета CAPTCHA включится в формах
+   автоматически, без пересборки. Пока секрет отсутствует, формы не блокируются.
+   Если сервер проверки недоступен, отправка формы приостанавливается.
 5. Проверьте вход, регистрацию и сброс пароля в реальном браузере. Неверный
    или просроченный токен должен отклоняться сервером.
 6. Убедитесь, что в Supabase Auth → Bot and Abuse Protection не включена
