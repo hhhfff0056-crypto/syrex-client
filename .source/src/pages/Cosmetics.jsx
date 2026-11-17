@@ -111,7 +111,7 @@ export default function Cosmetics() {
           <div className="syrex-cosmetics-icon"><Sparkles size={29}/></div>
           <div>
             <h1>Моя косметика</h1>
-            <p>Выбирай внешний вид прямо на сайте — изменения сохраняются для клиента Syrex</p>
+            <p>Косметика синхронизируется с модулем Globals в Syrex через сервер сайта</p>
           </div>
         </header>
 
