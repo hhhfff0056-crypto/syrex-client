@@ -13,7 +13,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(() => Boolean(getAuthItem('authToken') && getAuthItem('userId')));
   const navRef = useRef(null);
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
