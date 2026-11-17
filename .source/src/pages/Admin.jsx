@@ -65,15 +65,8 @@ const Admin = () => {
     show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } },
   };
 
-  useEffect(() => {
-    const authUser = getAuthItem('authUser');
-    const token = getAuthItem('authToken');
-    const authed = authUser === 'ADMIN' || authUser === 'DEVELOPER';
-    if (!authed || !actorId || !token) {
-      localStorage.setItem('postLoginRedirect', '/admin');
-      navigate('/login');
-    }
-  }, [navigate, actorId]);
+  // /admin is gated by a fresh server-validated Supabase Auth user in App.jsx.
+  // Local storage role flags are display-only and must never grant access.
 
   const avatarDataUrl = getAuthItem('avatarDataUrl');
 
