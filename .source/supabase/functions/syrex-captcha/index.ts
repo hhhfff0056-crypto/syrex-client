@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2.83.0";
+
 // Syrex's independent, server-checked arithmetic CAPTCHA.
 // No third-party CAPTCHA keys are needed. This is an anti-spam speed bump,
 // NOT a replacement for native Supabase Auth abuse protection.
@@ -45,10 +47,51 @@ function randomInt(min: number, max: number): number {
   crypto.getRandomValues(arr);
   return min + arr[0] % (max - min + 1);
 }
+
+// The hash is not reversible without the server-only secret, and raw addresses
+// and auth tokens are never written into the rate-limit table.
+async function rateDigest(secret: string, subject: string): Promise<string> {
+  const bytes = new TextEncoder().encode("syrex-rate-v1:" + secret + ":" + subject);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function peerAddress(req: Request): string {
+  const raw = req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+  const candidate = raw.trim();
+  return /^[a-f0-9:.]{3,80}$/i.test(candidate) ? candidate : "unknown";
+}
+async function rateAllowed(admin: ReturnType<typeof createClient>, secret: string,
+  scope: string, subject: string, maxHits: number, windowSeconds: number): Promise<boolean> {
+  const fingerprint = await rateDigest(secret, subject);
+  const { data, error } = await admin.rpc("syrex_rate_limit_check", {
+    p_scope: scope, p_subject_hash: fingerprint, p_max_hits: maxHits, p_window_seconds: windowSeconds
+  });
+  if (error) throw error; // fail closed when DB throttling cannot be enforced
+  return data === true;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
   if (req.headers.get('origin') !== origin) return json({ error: 'Forbidden origin' }, 403);
   const mode = new URL(req.url).searchParams.get('mode');
+  if (Number(req.headers.get('content-length') || 0) > 2048) return json({ error: 'Request too large' }, 413);
+  if ((mode === 'challenge' && req.method === 'GET') || (mode === 'verify' && req.method === 'POST')) {
+    const url = Deno.env.get('SUPABASE_URL') || '';
+    const secret = getKeyMaterial();
+    if (!url || !secret) return json({ error: 'Captcha unavailable' }, 503);
+    try {
+      const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+      const scope = mode === 'challenge' ? 'captcha-challenge' : 'captcha-verify';
+      const limit = mode === 'challenge' ? 30 : 60;
+      if (!(await rateAllowed(admin, secret, scope, 'ip:' + peerAddress(req), limit, 300))) {
+        return json({ error: 'Слишком много попыток. Повторите позже.' }, 429);
+      }
+    } catch {
+      return json({ error: 'Проверка временно недоступна' }, 503);
+    }
+  }
   if (req.method === 'GET' && mode === 'status') {
     return json({ ready: Boolean(getKeyMaterial()) });
   }
@@ -68,7 +111,9 @@ Deno.serve(async (req: Request) => {
     if (req.method === 'POST' && mode === 'verify') {
       let payload: Record<string, unknown>;
       try {
-        payload = await req.json();
+        const raw = await req.text();
+        if (raw.length > 2048) return json({ success: false, error: 'Request too large' }, 413);
+        payload = JSON.parse(raw);
       } catch {
         return json({ success: false, error: 'Invalid JSON' }, 400);
       }

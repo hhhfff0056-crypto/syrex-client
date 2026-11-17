@@ -36,6 +36,31 @@ function newSalt(): string {
   return [...b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
+
+// The hash is not reversible without the server-only secret, and raw addresses
+// and auth tokens are never written into the rate-limit table.
+async function rateDigest(secret: string, subject: string): Promise<string> {
+  const bytes = new TextEncoder().encode("syrex-rate-v1:" + secret + ":" + subject);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function peerAddress(req: Request): string {
+  const raw = req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+  const candidate = raw.trim();
+  return /^[a-f0-9:.]{3,80}$/i.test(candidate) ? candidate : "unknown";
+}
+async function rateAllowed(admin: ReturnType<typeof createClient>, secret: string,
+  scope: string, subject: string, maxHits: number, windowSeconds: number): Promise<boolean> {
+  const fingerprint = await rateDigest(secret, subject);
+  const { data, error } = await admin.rpc("syrex_rate_limit_check", {
+    p_scope: scope, p_subject_hash: fingerprint, p_max_hits: maxHits, p_window_seconds: windowSeconds
+  });
+  if (error) throw error; // fail closed when DB throttling cannot be enforced
+  return data === true;
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") {
@@ -59,15 +84,17 @@ Deno.serve(async (req: Request) => {
   if (!url || !publishable || !secret) return json({ error: "Сервис недоступен." }, 503);
 
   try {
+    const admin = createClient(url, secret, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    if (!(await rateAllowed(admin, secret, "device-ip", "ip:" + peerAddress(req), 240, 60))) {
+      return json({ error: "Слишком много запросов. Повторите позже." }, 429);
+    }
     const publicClient = createClient(url, publishable, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
     if (authError || !user?.id) return json({ error: "Сеанс истёк. Войдите снова." }, 401);
-
-    const admin = createClient(url, secret, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     let payload: Record<string, unknown> = {};
     try {
       const raw = await req.text();
@@ -81,6 +108,13 @@ Deno.serve(async (req: Request) => {
     const action = payload.action;
     if (action !== "status" && action !== "bind" && action !== "verify") {
       return json({ error: "Неизвестная операция." }, 400);
+    }
+    const actionLimits: Record<string, [number, number]> = {
+      status: [90, 60], bind: [6, 600], verify: [180, 60]
+    };
+    const [limit, duration] = actionLimits[action as string];
+    if (!(await rateAllowed(admin, secret, "device-" + action, "user:" + user.id, limit, duration))) {
+      return json({ error: "Слишком много запросов. Повторите позже." }, 429);
     }
     const { data: existing, error: bindingError } = await admin
       .from("syrex_device_bindings")

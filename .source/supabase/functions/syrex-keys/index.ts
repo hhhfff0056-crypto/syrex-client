@@ -57,6 +57,31 @@ function normalizeError(error: unknown): string {
   return "Ошибка сервера ключей. Повторите попытку.";
 }
 
+
+// The hash is not reversible without the server-only secret, and raw addresses
+// and auth tokens are never written into the rate-limit table.
+async function rateDigest(secret: string, subject: string): Promise<string> {
+  const bytes = new TextEncoder().encode("syrex-rate-v1:" + secret + ":" + subject);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function peerAddress(req: Request): string {
+  const raw = req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+  const candidate = raw.trim();
+  return /^[a-f0-9:.]{3,80}$/i.test(candidate) ? candidate : "unknown";
+}
+async function rateAllowed(admin: ReturnType<typeof createClient>, secret: string,
+  scope: string, subject: string, maxHits: number, windowSeconds: number): Promise<boolean> {
+  const fingerprint = await rateDigest(secret, subject);
+  const { data, error } = await admin.rpc("syrex_rate_limit_check", {
+    p_scope: scope, p_subject_hash: fingerprint, p_max_hits: maxHits, p_window_seconds: windowSeconds
+  });
+  if (error) throw error; // fail closed when DB throttling cannot be enforced
+  return data === true;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return req.headers.get("origin") === allowedOrigin
@@ -73,24 +98,42 @@ Deno.serve(async (req: Request) => {
   if (!url || !publishable || !secret) {
     return respond({ error: "Сервис ключей ещё не готов." }, 503);
   }
+  if (Number(req.headers.get("content-length") || 0) > 4096) {
+    return respond({ error: "Слишком большой запрос." }, 413);
+  }
   const token = (req.headers.get("authorization") || "").match(/^Bearer\s+(.+)$/i)?.[1];
   if (!token) return respond({ error: "Войдите в аккаунт." }, 401);
 
   try {
+    const admin = createClient(url, secret, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    if (!(await rateAllowed(admin, secret, "keys-ip", "ip:" + peerAddress(req), 240, 60))) {
+      return respond({ error: "Слишком много запросов. Повторите позже." }, 429);
+    }
     const publicClient = createClient(url, publishable, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
     if (authError || !user?.id) return respond({ error: "Сеанс истёк. Войдите заново." }, 401);
-
-    const admin = createClient(url, secret, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     // Read role from Supabase Auth app_metadata fetched from server, not user_metadata.
     const isDeveloper = String(user.app_metadata?.role || "").toUpperCase() === "DEV";
     let payload: Record<string, unknown> = {};
     try { payload = await req.json(); } catch { return respond({ error: "Неверный запрос." }, 400); }
     const action = payload.action;
+    const limits: Record<string, [number, number]> = {
+      status: [120, 60], download: [15, 60], "download-free": [30, 60],
+      redeem: [8, 600], generate: [10, 600], history: [45, 60]
+    };
+    if (typeof action !== "string" || !limits[action]) {
+      return respond({ error: "Неизвестная операция." }, 400);
+    }
+    const [maxHits, windowSeconds] = limits[action];
+    const scope = action === "download-free" ? "keys-download" :
+      action === "download" ? "keys-download" : "keys-" + action;
+    if (!(await rateAllowed(admin, secret, scope, "user:" + user.id, maxHits, windowSeconds))) {
+      return respond({ error: "Слишком много запросов. Повторите позже." }, 429);
+    }
 
     if (action === "status" || action === "download" || action === "download-free") {
       const { data: license, error: dbError } = await admin.from("syrex_licenses")

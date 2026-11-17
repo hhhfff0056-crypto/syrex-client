@@ -6,6 +6,8 @@ import './SyrexCaptcha.css';
 const baseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
 const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
 const endpoint = baseUrl + '/functions/v1/syrex-captcha';
+export const turnstileSiteKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '').trim();
+export const turnstileEnabled = Boolean(turnstileSiteKey);
 
 async function readChallenge(mode, signal) {
   const response = await fetch(endpoint + '?mode=' + mode, {
@@ -19,8 +21,9 @@ async function readChallenge(mode, signal) {
 }
 
 export const useCaptchaStatus = () => {
-  const [status, setStatus] = useState('checking');
+  const [status, setStatus] = useState(turnstileEnabled ? 'ready' : 'checking');
   useEffect(() => {
+    if (turnstileEnabled) return;
     const controller = new AbortController();
     readChallenge('status', controller.signal)
       .then((result) => {
@@ -37,6 +40,8 @@ export const useCaptchaStatus = () => {
 const SyrexCaptcha = forwardRef(function SyrexCaptcha({ onTokenChange }, ref) {
   const callback = useRef(onTokenChange);
   const sequence = useRef(0);
+  const turnstileContainer = useRef(null);
+  const turnstileWidget = useRef(null);
   const [challenge, setChallenge] = useState(null);
   const [answer, setAnswer] = useState('');
   const [state, setState] = useState('loading');
@@ -59,12 +64,56 @@ const SyrexCaptcha = forwardRef(function SyrexCaptcha({ onTokenChange }, ref) {
     }
   }, []);
 
-  useImperativeHandle(ref, () => ({ reset: newChallenge }), [newChallenge]);
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      callback.current('');
+      if (turnstileEnabled) {
+        if (turnstileWidget.current !== null) window.turnstile?.reset(turnstileWidget.current);
+      } else newChallenge();
+    }
+  }), [newChallenge]);
 
   useEffect(() => {
-    newChallenge();
-    return () => { sequence.current += 1; };
+    if (!turnstileEnabled) {
+      newChallenge();
+      return () => { sequence.current += 1; };
+    }
   }, [newChallenge]);
+
+  // Optional native Turnstile widget for Supabase Auth CAPTCHA. Do not claim
+  // strong bot blocking until the provider's secret is enabled in Supabase.
+  useEffect(() => {
+    if (!turnstileEnabled) return;
+    let disposed = false;
+    const onLoaded = () => {
+      if (disposed || !turnstileContainer.current || !window.turnstile || turnstileWidget.current !== null) return;
+      turnstileWidget.current = window.turnstile.render(turnstileContainer.current, {
+        sitekey: turnstileSiteKey,
+        theme: 'auto',
+        callback: (token) => callback.current(token),
+        'expired-callback': () => callback.current(''),
+        'error-callback': () => callback.current(''),
+      });
+    };
+    let script = document.querySelector('script[data-syrex-turnstile]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.dataset.syrexTurnstile = '1';
+      document.head.appendChild(script);
+    }
+    if (window.turnstile) onLoaded();
+    else script.addEventListener('load', onLoaded);
+    return () => {
+      disposed = true;
+      script?.removeEventListener('load', onLoaded);
+      if (turnstileWidget.current !== null && window.turnstile) {
+        window.turnstile.remove(turnstileWidget.current);
+        turnstileWidget.current = null;
+      }
+    };
+  }, []);
 
   const changeAnswer = (value) => {
     if (!/^\d{0,2}$/.test(value)) return;
@@ -78,6 +127,14 @@ const SyrexCaptcha = forwardRef(function SyrexCaptcha({ onTokenChange }, ref) {
         })
       : '');
   };
+
+  if (turnstileEnabled) return (
+    <div className="syrex-captcha" aria-label="Защита от ботов Cloudflare Turnstile">
+      <div className="syrex-captcha-heading"><ShieldCheck size={17} /><span>Проверка безопасности</span></div>
+      <div ref={turnstileContainer} className="syrex-turnstile-widget" />
+      <div className="syrex-captcha-note">Подтвердите проверку для продолжения.</div>
+    </div>
+  );
 
   return (
     <div className="syrex-captcha" aria-label="Капча Syrex">

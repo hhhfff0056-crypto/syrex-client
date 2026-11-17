@@ -2,12 +2,18 @@ import { clearAuth, getAuthItem, getAuthStorageType, setAuthItems } from '../uti
 
 const baseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
 const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
+const turnstileEnabled = Boolean((import.meta.env.VITE_TURNSTILE_SITE_KEY || '').trim());
 export const authConfigured = /^https:\/\/[^/]+$/i.test(baseUrl) && key.startsWith('sb_publishable_');
 
 // This challenge is checked on the server before requesting Supabase Auth.
 // It limits casual automated submissions from the UI; public Auth endpoints
 // still need native CAPTCHA/rate limits for stronger abuse prevention.
 const verifyCaptcha = async (captchaToken) => {
+  if (turnstileEnabled) {
+    if (!captchaToken || captchaToken.length > 4096) throw new Error('Пройдите проверку безопасности.');
+    // Supabase Auth verifies the token with its private Turnstile secret.
+    return;
+  }
   if (!captchaToken) throw new Error('Решите пример для проверки.');
   let payload;
   try {
@@ -86,7 +92,10 @@ export const signIn = async (email, password, remember = true, captchaToken = ''
   await verifyCaptcha(captchaToken);
   const result = await request('token?grant_type=password', {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password }
+    payload: {
+      email: email.trim().toLowerCase(), password,
+      ...(turnstileEnabled ? { gotrue_meta_security: { captcha_token: captchaToken } } : {})
+    }
   });
   return persistSession(result, remember);
 };
@@ -95,7 +104,10 @@ export const register = async (username, email, password, captchaToken = '') => 
   await verifyCaptcha(captchaToken);
   const result = await request('signup?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() } }
+    payload: {
+      email: email.trim().toLowerCase(), password, data: { username: username.trim() },
+      ...(turnstileEnabled ? { gotrue_meta_security: { captcha_token: captchaToken } } : {})
+    }
   });
   if (result.access_token && result.refresh_token) {
     return { needsConfirmation: false, user: persistSession(result, true) };
@@ -171,7 +183,10 @@ export const sendRecovery = async (email, captchaToken = '') => {
   await verifyCaptcha(captchaToken);
   return request('recover?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
-    payload: { email: email.trim().toLowerCase() }
+    payload: {
+      email: email.trim().toLowerCase(),
+      ...(turnstileEnabled ? { gotrue_meta_security: { captcha_token: captchaToken } } : {})
+    }
   });
 };
 

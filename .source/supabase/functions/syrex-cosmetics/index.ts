@@ -47,6 +47,31 @@ function selection(value: unknown): Record<string, number> | null {
   return out;
 }
 
+
+// The hash is not reversible without the server-only secret, and raw addresses
+// and auth tokens are never written into the rate-limit table.
+async function rateDigest(secret: string, subject: string): Promise<string> {
+  const bytes = new TextEncoder().encode("syrex-rate-v1:" + secret + ":" + subject);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function peerAddress(req: Request): string {
+  const raw = req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+  const candidate = raw.trim();
+  return /^[a-f0-9:.]{3,80}$/i.test(candidate) ? candidate : "unknown";
+}
+async function rateAllowed(admin: ReturnType<typeof createClient>, secret: string,
+  scope: string, subject: string, maxHits: number, windowSeconds: number): Promise<boolean> {
+  const fingerprint = await rateDigest(secret, subject);
+  const { data, error } = await admin.rpc("syrex_rate_limit_check", {
+    p_scope: scope, p_subject_hash: fingerprint, p_max_hits: maxHits, p_window_seconds: windowSeconds
+  });
+  if (error) throw error; // fail closed when DB throttling cannot be enforced
+  return data === true;
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return origin === site
@@ -79,6 +104,9 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(url, secret, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    if (!(await rateAllowed(admin, secret, "cosmetics-ip", "ip:" + peerAddress(req), 360, 60))) {
+      return response({ error: "Слишком много запросов. Повторите позже." }, 429);
+    }
     const token = (req.headers.get("authorization") || "").match(/^Bearer\s+(.+)$/i)?.[1];
     if (!token) return response({ error: "Войдите в Syrex" }, 401);
     const publicClient = createClient(url, pub, {
@@ -86,6 +114,14 @@ Deno.serve(async (req: Request) => {
     });
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
     if (authError || !user?.id) return response({ error: "Сеанс истёк" }, 401);
+    const actionLimits: Record<string, [number, number]> = {
+      lookup: [180, 60], mine: [60, 60], challenge: [6, 600],
+      link: [12, 600], save: [45, 60]
+    };
+    const [limit, duration] = actionLimits[String(action)];
+    if (!(await rateAllowed(admin, secret, "cosmetics-" + action, "user:" + user.id, limit, duration))) {
+      return response({ error: "Слишком много запросов. Повторите позже." }, 429);
+    }
 
     // Read-only lookup requires an authenticated Syrex account, and returns only equipped IDs.
     if (action === "lookup") {
