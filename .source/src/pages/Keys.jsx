@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { KeyRound, ShieldCheck, Download, Copy, RefreshCw, Settings2, ArrowLeft, CheckCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { downloadLicensedClient, getLicenseStatus, licenseRequest, redeemLicenseKey } from '../services/licenseApi';
+import { PREMIUM_PLANS, priceRUB } from '../data/offers';
 import './Keys.css';
 
 const formatDate = (date) => date ? new Date(date).toLocaleDateString('ru-RU') : 'Навсегда';
@@ -142,7 +143,7 @@ const Keys = () => {
         {status && status.isDeveloper && <div className="keys-panel keys-developer">
           <span className="keys-panel-label"><Settings2 size={16} /> Управление DEV</span>
           <h2>Создать ключи активации</h2>
-          <p>Только аккаунт с серверной ролью DEV может выпускать новые ключи.</p>
+          <p>Только DEV может выпускать ключи Premium на 30, 90, 180 дней или навсегда. Сброс HWID оформляется отдельно.</p>
           <form onSubmit={generate} className="keys-dev-form">
             <label>Количество
               <select value={count} onChange={(e) => setCount(Number(e.target.value))}>
@@ -151,11 +152,11 @@ const Keys = () => {
             </label>
             <label>Срок доступа
               <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
-                <option value={7}>7 дней</option>
-                <option value={30}>30 дней</option>
-                <option value={90}>90 дней</option>
-                <option value={365}>1 год</option>
-                <option value={0}>Навсегда</option>
+                {PREMIUM_PLANS.map((plan) => (
+                  <option key={plan.kind} value={plan.durationDays}>
+                    {plan.durationDays === 0 ? 'Premium навсегда' : 'Premium ' + plan.durationDays + ' дней'} — {priceRUB(plan.priceValue)}
+                  </option>
+                ))}
               </select>
             </label>
             <button className="keys-primary" type="submit" disabled={busy !== ''}>

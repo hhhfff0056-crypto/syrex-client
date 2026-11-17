@@ -449,3 +449,23 @@
     color: transparent;
 }
 
+
+/* Four Premium tiers with HWID reset as a separate service. */
+.pricing-grid-premium{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pricing-grid-premium .pricing-premium-card{min-width:0;padding:25px 20px;gap:18px}
+.pricing-premium-card .card-header h3{font-weight:700;font-size:19px}
+.pricing-crown{color:var(--accent-green);flex-shrink:0}
+.pricing-plan-duration{font-size:13px;color:var(--text-secondary);margin-top:-10px}
+.pricing-grid-premium .currency{font-size:clamp(28px,3vw,38px);letter-spacing:-.035em}
+.pricing-grid-premium .features-list{gap:11px}
+.pricing-grid-premium .features-list li{font-size:12px;line-height:1.4}
+.pricing-extra-title{font-size:16px;font-weight:650;color:var(--text-primary);margin:34px 0 15px}
+.pricing-hwid-card{padding:24px;gap:20px;max-width:100%;display:flex;flex-direction:row;align-items:center;justify-content:space-between}
+.pricing-hwid-main{display:flex;align-items:center;gap:30px;min-width:0;flex:1}
+.pricing-hwid-heading{display:flex;gap:12px;align-items:flex-start}
+.pricing-hwid-heading h3{font-size:19px;color:var(--text-primary);font-weight:650}
+.pricing-hwid-heading p{color:var(--text-secondary);font-size:12px;line-height:1.6;margin-top:4px}
+.pricing-hwid-price{font-weight:700;font-size:27px;color:var(--text-primary);white-space:nowrap}
+.pricing-hwid-button{max-width:172px;flex:0 0 172px}
+@media(max-width:1150px){.pricing-grid-premium{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.pricing-grid-premium{grid-template-columns:1fr}.pricing-hwid-card{flex-direction:column;align-items:stretch}.pricing-hwid-main{justify-content:space-between}.pricing-hwid-button{max-width:none;flex:auto}}

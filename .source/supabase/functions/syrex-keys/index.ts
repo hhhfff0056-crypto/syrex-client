@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
       const count = Number(payload.count);
       const durationDays = Number(payload.durationDays);
       if (!Number.isInteger(count) || count < 1 || count > 10 ||
-          ![0, 7, 30, 90, 365].includes(durationDays)) {
+          ![0, 30, 90, 180].includes(durationDays)) {
         return respond({ error: "Выберите 1–10 ключей и допустимый срок доступа." }, 400);
       }
       const codes = Array.from({ length: count }, issueKey);
