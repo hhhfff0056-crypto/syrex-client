@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound } from 'lucide-react';
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
-import { downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
+import { downloadFreeClient, downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
 import './Profile.css';
 import './SupabaseProfile.css';
 
@@ -45,11 +45,16 @@ const SupabaseProfile = () => {
   };
 
   const download = async () => {
-    if (downloading || !license?.active || !license?.fileReady) return;
+    if (downloading || !license) return;
+    const available = license.active
+      ? (license.premiumFileReady ?? license.fileReady)
+      : license.freeFileReady;
+    if (!available) return;
     setDownloading(true);
     setError('');
     try {
-      await downloadLicensedClient();
+      if (license.active) await downloadLicensedClient();
+      else await downloadFreeClient();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -117,14 +122,24 @@ const SupabaseProfile = () => {
                   <span className={`tag-pill role-badge ${accountRole === 'DEV' ? 'dev-role' : ''}`}><ShieldCheck size={13} /> {accountRole}</span>
                   <span className="tag-pill"><ShieldCheck size={13} /> Аккаунт подтверждён</span>
                   <span className="tag-pill muted">{license?.active
-                    ? license.isDeveloper ? 'Доступ DEV' : license.expiresAt ? 'Лицензия до ' + new Date(license.expiresAt).toLocaleDateString('ru-RU') : 'Лицензия навсегда'
-                    : 'Ключ не активирован'}</span>
+                    ? license.isDeveloper ? 'Версия: Premium · DEV' : license.expiresAt ? 'Premium до ' + new Date(license.expiresAt).toLocaleDateString('ru-RU') : 'Premium навсегда'
+                    : 'Версия: Free — без подписки'}</span>
                 </div>
-                <button className="btn-trial admin-btn download-btn profile-action-btn" type="button" onClick={download} disabled={downloading || !license?.active || !license?.fileReady}>
-                  <Download size={16} /> {downloading ? 'Получаем файл…' : !license?.active ? 'Скачивание закрыто' : !license?.fileReady ? 'Файл пока не загружен' : 'Скачать клиент'}
+                <button
+                  className="btn-trial admin-btn download-btn profile-action-btn"
+                  type="button"
+                  onClick={download}
+                  disabled={downloading || !license || !(license.active ? (license.premiumFileReady ?? license.fileReady) : license.freeFileReady)}
+                >
+                  <Download size={16} /> {downloading
+                    ? 'Получаем файл…'
+                    : !license ? 'Проверяем версию…'
+                    : !(license.active ? (license.premiumFileReady ?? license.fileReady) : license.freeFileReady)
+                      ? license.active ? 'Premium ещё не загружен' : 'Free ещё не загружен'
+                      : license.active ? 'Скачать Premium' : 'Скачать Free'}
                 </button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
-                  <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : 'Активировать ключ'}
+                  <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : license?.active ? 'Моя лицензия Premium' : 'Перейти на Premium'}
                 </button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={askReset} disabled={busy}>
                   <KeyRound size={16} /> {busy ? 'Отправляем...' : 'Сменить пароль'}
@@ -141,7 +156,7 @@ const SupabaseProfile = () => {
                   <div className="profile-row"><span><ShieldCheck size={14} /> Роль</span><strong>{accountRole}</strong></div>
                   <div className="profile-row"><span><Calendar size={14} /> Дата регистрации</span><strong>{joinedAt}</strong></div>
                 </div>
-                <p className="auth-profile-hint">Доступ к клиенту выдаётся после активации одноразового ключа. Скачивание защищено закрытым хранилищем Supabase. Аватар пока хранится только в этом браузере.</p>
+                <p className="auth-profile-hint">Free-версия доступна без подписки после входа. Для Premium требуется активированный ключ. Файлы выдаются из закрытого хранилища Supabase; аватар остаётся в этом браузере.</p>
                 {error && <div className="login-error" role="alert">{error}</div>}
                 {notice && <div className="auth-success" role="status">{notice}</div>}
               </div>

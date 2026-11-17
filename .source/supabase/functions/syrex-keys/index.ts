@@ -6,6 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 const allowedOrigin = "https://hhhfff0056-crypto.github.io";
 const bucketName = "syrex-client";
 const objectName = "SyrexClient.jar";
+const freeObjectName = "SyrexFree.jar";
 const headers = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -89,7 +90,7 @@ Deno.serve(async (req: Request) => {
     try { payload = await req.json(); } catch { return respond({ error: "Неверный запрос." }, 400); }
     const action = payload.action;
 
-    if (action === "status" || action === "download") {
+    if (action === "status" || action === "download" || action === "download-free") {
       const { data: license, error: dbError } = await admin.from("syrex_licenses")
         .select("expires_at,activated_at")
         .eq("user_id", user.id).maybeSingle();
@@ -97,23 +98,31 @@ Deno.serve(async (req: Request) => {
       const expiresAt = license?.expires_at || null;
       const licensed = Boolean(license) && (!expiresAt || new Date(expiresAt).getTime() > Date.now());
       const active = licensed || isDeveloper;
+      // Both editions live in the private bucket. Neither has a public URL.
       const { data: objects, error: storageError } = await admin.storage.from(bucketName).list("", {
-        limit: 100, search: objectName
+        limit: 100
       });
       if (storageError) throw storageError;
-      const fileReady = Boolean(objects?.some((item) => item.name === objectName));
+      const premiumFileReady = Boolean(objects?.some((item) => item.name === objectName));
+      const freeFileReady = Boolean(objects?.some((item) => item.name === freeObjectName));
 
       if (action === "status") {
         return respond({
           active, licensed, isDeveloper,
+          edition: active ? "PREMIUM" : "FREE",
           activatedAt: license?.activated_at || null,
-          expiresAt, fileReady,
+          expiresAt,
+          fileReady: premiumFileReady,
+          premiumFileReady, freeFileReady
         });
       }
-      if (!active) return respond({ error: "Сначала активируйте ключ доступа." }, 403);
-      if (!fileReady) return respond({ error: "Файл клиента ещё не загружен администратором." }, 404);
+      const isFreeDownload = action === "download-free";
+      if (!isFreeDownload && !active) return respond({ error: "Для Premium требуется активная подписка." }, 403);
+      if (isFreeDownload && !freeFileReady) return respond({ error: "Бесплатная версия ещё не загружена администратором." }, 404);
+      if (!isFreeDownload && !premiumFileReady) return respond({ error: "Premium-версия ещё не загружена администратором." }, 404);
+      const downloadName = isFreeDownload ? freeObjectName : objectName;
       const { data, error: linkError } = await admin.storage.from(bucketName)
-        .createSignedUrl(objectName, 60, { download: objectName });
+        .createSignedUrl(downloadName, 60, { download: downloadName });
       if (linkError || !data?.signedUrl) throw linkError || new Error("Signed URL unavailable");
       return respond({ url: data.signedUrl, expiresInSeconds: 60 });
     }

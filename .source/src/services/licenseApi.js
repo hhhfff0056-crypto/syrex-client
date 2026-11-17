@@ -34,8 +34,11 @@ export const licenseRequest = async (action, params = {}) => {
 
 export const getLicenseStatus = () => licenseRequest('status');
 export const redeemLicenseKey = (key) => licenseRequest('redeem', { key });
-export const downloadLicensedClient = async () => {
-  const data = await licenseRequest('download');
+const requestDownload = async (action) => {
+  const data = await licenseRequest(action);
   if (!data.url || !/^https:\/\//.test(data.url)) throw new Error('Ссылка для скачивания недоступна.');
   window.location.assign(data.url);
 };
+
+export const downloadLicensedClient = () => requestDownload('download');
+export const downloadFreeClient = () => requestDownload('download-free');

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { KeyRound, ShieldCheck, Download, Copy, RefreshCw, Settings2, ArrowLeft, CheckCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { downloadLicensedClient, getLicenseStatus, licenseRequest, redeemLicenseKey } from '../services/licenseApi';
+import { downloadFreeClient, downloadLicensedClient, getLicenseStatus, licenseRequest, redeemLicenseKey } from '../services/licenseApi';
 import { PREMIUM_PLANS, priceRUB } from '../data/offers';
 import './Keys.css';
 
@@ -82,10 +82,11 @@ const Keys = () => {
   };
 
   const download = async () => {
-    if (busy) return;
+    if (busy || !status) return;
     setBusy('download'); setError('');
     try {
-      await downloadLicensedClient();
+      if (status.active) await downloadLicensedClient();
+      else await downloadFreeClient();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -109,7 +110,7 @@ const Keys = () => {
         <div className="keys-heading">
           <div className="keys-heading-icon"><KeyRound size={24} /></div>
           <h1>Ключи Syrex Client</h1>
-          <p>Активируйте ключ на своём аккаунте, чтобы получить доступ к скачиванию клиента.</p>
+          <p>Без Premium-подписки доступна бесплатная версия Free. Активируйте ключ, чтобы получить Premium.</p>
         </div>
 
         {loading && <div className="keys-panel keys-muted">Проверяем аккаунт и лицензию…</div>}
@@ -119,21 +120,29 @@ const Keys = () => {
         {status && <div className="keys-panel keys-status">
           <div>
             <span className="keys-panel-label"><ShieldCheck size={16} /> Статус доступа</span>
-            <h2>{status.active ? 'Доступ открыт' : 'Ключ не активирован'}</h2>
-            <p>{status.isDeveloper ? 'Аккаунт DEV: доступ разработчика.' :
-              status.active ? 'Лицензия до ' + formatDate(status.expiresAt) :
-              'Введите ключ, чтобы открыть скачивание.'}</p>
+            <h2>{status.active ? 'Версия Premium' : 'Версия Free'}</h2>
+            <p>{status.isDeveloper ? 'Аккаунт DEV: Premium доступен без ключа.' :
+              status.active ? 'Подписка Premium: ' + (status.expiresAt ? 'до ' + formatDate(status.expiresAt) : 'навсегда') :
+              'Бесплатный доступ без подписки. Для Premium активируйте ключ ниже.'}</p>
           </div>
-          {status.active &&
-            <button className="keys-primary" type="button" disabled={busy !== '' || !status.fileReady} onClick={download}>
-              <Download size={17} /> {status.fileReady ? (busy === 'download' ? 'Получаем файл…' : 'Скачать клиент') : 'Клиент ещё не загружен'}
-            </button>}
+          <button
+            className="keys-primary"
+            type="button"
+            disabled={busy !== '' || !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady)}
+            onClick={download}
+          >
+            <Download size={17} />
+            {busy === 'download' ? 'Получаем файл…'
+              : !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady)
+                ? status.active ? 'Premium ещё не загружен' : 'Free ещё не загружен'
+                : status.active ? 'Скачать Premium' : 'Скачать Free'}
+          </button>
         </div>}
 
         {status && !status.active && <form className="keys-panel keys-redeem" onSubmit={redeem}>
           <span className="keys-panel-label"><KeyRound size={16} /> Активация</span>
           <h2>Введите ключ</h2>
-          <p>Ключ одноразовый. После активации доступ привязывается к вашему аккаунту.</p>
+          <p>Free доступен и без ключа. Ключ одноразовый и открывает Premium на выбранный срок.</p>
           <div className="keys-form-line">
             <input value={key} onChange={(e) => setKey(e.target.value.toUpperCase().slice(0, 38))} required autoComplete="off" spellCheck="false" placeholder="SYREX-XXXXX-XXXXX-XXXXX-XXXXX" aria-label="Ключ активации" />
             <button className="keys-primary" type="submit" disabled={busy !== '' || !key.trim()}>{busy === 'redeem' ? 'Проверяем…' : 'Активировать'}</button>
@@ -180,7 +189,11 @@ const Keys = () => {
             </div>)}
           </div> : <p className="keys-muted">Пока нет выпущенных ключей.</p>}
         </div>}
-        {status && !status.fileReady && <p className="keys-footnote">Система ключей уже работает. Для скачивания администратору нужно загрузить файл SyrexClient.jar в закрытое хранилище Supabase.</p>}
+        {status && !(status.active ? (status.premiumFileReady ?? status.fileReady) : status.freeFileReady) && <p className="keys-footnote">
+          {status.active
+            ? 'Для скачивания Premium администратору нужно загрузить SyrexClient.jar в закрытое хранилище Supabase.'
+            : 'Для скачивания Free администратору нужно загрузить SyrexFree.jar в закрытое хранилище Supabase.'}
+        </p>}
       </div>
     </motion.section>
   );
