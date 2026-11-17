@@ -4,32 +4,36 @@ const baseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/,
 const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
 export const authConfigured = /^https:\/\/[^/]+$/i.test(baseUrl) && key.startsWith('sb_publishable_');
 
-// Google reCAPTCHA is optional until the site owner configures both keys.
-// Google tokens are verified by a Supabase Edge Function, not trusted in the browser.
-// For enforcement at the underlying public GoTrue endpoints, use the native
-// Supabase CAPTCHA providers (hCaptcha or Turnstile) instead.
-const recaptchaEnabled = Boolean((import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim());
-
-const verifyRecaptcha = async (captchaToken) => {
-  // Forms require a token only after the server reports that its secret is set.
-  // Without the server secret, users can still sign in normally.
-  if (!recaptchaEnabled || !captchaToken) return;
+// This challenge is checked on the server before requesting Supabase Auth.
+// It limits casual automated submissions from the UI; public Auth endpoints
+// still need native CAPTCHA/rate limits for stronger abuse prevention.
+const verifyCaptcha = async (captchaToken) => {
+  if (!captchaToken) throw new Error('Решите пример для проверки.');
+  let payload;
+  try {
+    payload = JSON.parse(captchaToken);
+  } catch {
+    throw new Error('Ошибка капчи. Обновите пример.');
+  }
+  if (!payload || typeof payload.nonce !== 'string') {
+    throw new Error('Неверная капча. Обновите пример.');
+  }
   let response;
   try {
-    response = await fetch(baseUrl + '/functions/v1/verify-recaptcha', {
+    response = await fetch(baseUrl + '/functions/v1/syrex-captcha?mode=verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },
-      body: JSON.stringify({ token: captchaToken }),
+      body: JSON.stringify(payload),
       cache: 'no-store'
     });
   } catch {
-    throw new Error('Сервис reCAPTCHA недоступен. Попробуйте позже.');
+    throw new Error('Не удалось связаться с проверкой капчи.');
   }
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.success !== true) {
-    throw new Error(response.status === 503
-      ? 'reCAPTCHA ещё не настроена администратором сайта.'
-      : 'Не удалось подтвердить reCAPTCHA. Пройдите проверку заново.');
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result.success !== true) {
+    throw new Error(response.status === 403
+      ? 'Неправильный ответ или время истекло. Решите новый пример.'
+      : 'Проверка капчи временно недоступна.');
   }
 };
 
@@ -79,7 +83,7 @@ const persistSession = (result, remember) => {
 };
 
 export const signIn = async (email, password, remember = true, captchaToken = '') => {
-  await verifyRecaptcha(captchaToken);
+  await verifyCaptcha(captchaToken);
   const result = await request('token?grant_type=password', {
     method: 'POST',
     payload: { email: email.trim().toLowerCase(), password }
@@ -88,7 +92,7 @@ export const signIn = async (email, password, remember = true, captchaToken = ''
 };
 
 export const register = async (username, email, password, captchaToken = '') => {
-  await verifyRecaptcha(captchaToken);
+  await verifyCaptcha(captchaToken);
   const result = await request('signup?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
     payload: { email: email.trim().toLowerCase(), password, data: { username: username.trim() } }
@@ -164,7 +168,7 @@ export const completeEmailRedirect = async () => {
 };
 
 export const sendRecovery = async (email, captchaToken = '') => {
-  await verifyRecaptcha(captchaToken);
+  await verifyCaptcha(captchaToken);
   return request('recover?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
     payload: { email: email.trim().toLowerCase() }

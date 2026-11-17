@@ -3,7 +3,7 @@ import { Lock, Mail, User, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authConfigured, register as registerAccount } from '../auth/supabaseAuth';
-import GoogleRecaptcha, { useCaptchaStatus } from '../components/GoogleRecaptcha';
+import SyrexCaptcha, { useCaptchaStatus } from '../components/SyrexCaptcha';
 import './Login.css';
 import './auth.css';
 
@@ -27,7 +27,7 @@ const Register = () => {
     event.preventDefault();
     if (!authConfigured || working) return;
     if (captchaUnavailable) {
-      setError('Проверка reCAPTCHA недоступна. Обновите страницу.');
+      setError('Проверка капчи Syrex недоступна. Обновите страницу.');
       return;
     }
     setError('');
@@ -97,8 +97,8 @@ const Register = () => {
                 <input value={repeat} onChange={(e) => setRepeat(e.target.value)} type="password" autoComplete="new-password" minLength={8} required />
               </div>
             </label>
-            {captchaEnabled && <GoogleRecaptcha ref={captchaRef} onTokenChange={setCaptchaToken} />}
-            {captchaStatus === 'error' && <div className="login-error" role="alert">Не удалось связаться с сервером проверки reCAPTCHA.</div>}
+            {captchaEnabled && <SyrexCaptcha ref={captchaRef} onTokenChange={setCaptchaToken} />}
+            {captchaStatus === 'error' && <div className="login-error" role="alert">Не удалось связаться с сервером проверки капчи Syrex.</div>}
             {error && <div className="login-error" role="alert">{error}</div>}
             {notice && <div className="auth-success" role="status">{notice}</div>}
             <button className="btn-hero-primary login-submit" type="submit" disabled={!authConfigured || working || !!notice || captchaUnavailable || (captchaEnabled && !captchaToken)}>{working ? 'Создаём...' : 'Зарегистрироваться'}</button>

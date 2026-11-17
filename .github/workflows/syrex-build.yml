@@ -28,7 +28,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://schhzjmsgdjicoiadoqx.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_ege-vbqEyqsq6HRn7DXtBQ_MQ8Op1UH' }}
-          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY || '6Le3iSQuAAAAALZe_vY4uP3O26NddeRC4QxS8nN6' }}
         working-directory: .source
         run: |
           sed -i 's/<BrowserRouter>/<BrowserRouter basename="\/syrex-client">/' src/main.jsx
