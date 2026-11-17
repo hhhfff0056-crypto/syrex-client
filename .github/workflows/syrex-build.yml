@@ -7,9 +7,14 @@ on:
       - '.github/workflows/syrex-build.yml'
 permissions:
   contents: write
+# Serialize builds so generated-site commits don't race and overwrite one another.
+concurrency:
+  group: syrex-site-build-main
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
