@@ -64,7 +64,7 @@ export default function Cosmetics() {
         <div className="syrex-cosmetics-note">
           <ShieldCheck size={19}/>
           <span>{linked ? 'Minecraft UUID привязан. Выбранная косметика видна другим игрокам Syrex.' :
-            'Minecraft ещё не привязан. Зайдите в мир с Syrex, чтобы другие игроки увидели косметику.'}
+            'Minecraft ещё не привязан. Войдите с действующей онлайн-сессией Minecraft Java и зайдите на сервер с Syrex для подтверждения UUID.'}
             {playerUuid && <small>UUID: {playerUuid}</small>}
           </span>
         </div>
@@ -107,7 +107,7 @@ export default function Cosmetics() {
         )}
         {error && <p className="syrex-cosmetics-error" role="alert">{error}</p>}
         {notice && <p className="syrex-cosmetics-success" role="status">{notice}</p>}
-        <p className="syrex-cosmetics-foot">Изменения видны пользователям Syrex на совместимых серверах Minecraft. Косметика не видна игрокам без Syrex.</p>
+        <p className="syrex-cosmetics-foot">Косметику видят игроки с Syrex на совместимых серверах. Для первичной привязки UUID используется проверка сессии Minecraft, без передачи Minecraft-токена на сайт. На офлайн-аккаунтах подтверждение UUID недоступно.</p>
       </div>
     </main>
   );
