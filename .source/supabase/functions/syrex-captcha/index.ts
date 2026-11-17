@@ -6,7 +6,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.83.0";
 const allowedOrigins = new Set([
   'https://syrex.us.mw',
   'https://www.syrex.us.mw',
-  'https://hhhfff0056-crypto.github.io'
+  'https://hhhfff0056-crypto.github.io',
+  'https://syrex-client.pages.dev'
 ]);
 const baseHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
