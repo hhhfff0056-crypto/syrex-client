@@ -43,6 +43,17 @@ function hexToBytes(hex: string): Uint8Array {
 function signedText(nonce: string, expiresAt: number, answer: number): Uint8Array {
   return encoder.encode('syrex-captcha-v1:' + nonce + ':' + expiresAt + ':' + answer);
 }
+
+// Signed proof-of-work for the automatic Syrex browser check.
+// This is an inexpensive bot speed bump, not a replacement for an upstream WAF.
+const BROWSER_POW_BITS = 12;
+function browserSignedText(nonce: string, expiresAt: number, agent: string): Uint8Array {
+  return encoder.encode('syrex-browser-v1-challenge:' + nonce + ':' + expiresAt + ':' +
+    BROWSER_POW_BITS + ':' + agent.slice(0, 256));
+}
+function browserProofText(nonce: string, solution: number): Uint8Array {
+  return encoder.encode('syrex-browser-v1-proof:' + nonce + ':' + solution);
+}
 function randomInt(min: number, max: number): number {
   const arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
@@ -90,14 +101,20 @@ Deno.serve(async (req: Request) => {
   if (!allowedOrigins.has(requestOrigin || '')) return json({ error: 'Forbidden origin' }, 403);
   const mode = new URL(req.url).searchParams.get('mode');
   if (Number(req.headers.get('content-length') || 0) > 2048) return json({ error: 'Request too large' }, 413);
-  if ((mode === 'challenge' && req.method === 'GET') || (mode === 'verify' && req.method === 'POST')) {
+  const isBrowserChallenge = req.method === 'GET' && mode === 'browser-challenge';
+  const isBrowserVerify = req.method === 'POST' && mode === 'browser-verify';
+  if ((mode === 'challenge' && req.method === 'GET') ||
+      (mode === 'verify' && req.method === 'POST') || isBrowserChallenge || isBrowserVerify) {
     const url = Deno.env.get('SUPABASE_URL') || '';
     const secret = getKeyMaterial();
     if (!url || !secret) return json({ error: 'Captcha unavailable' }, 503);
     try {
       const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
-      const scope = mode === 'challenge' ? 'captcha-challenge' : 'captcha-verify';
-      const limit = mode === 'challenge' ? 30 : 60;
+      const scope = isBrowserChallenge ? 'browser-challenge' :
+        isBrowserVerify ? 'browser-verify' :
+        mode === 'challenge' ? 'captcha-challenge' : 'captcha-verify';
+      const limit = isBrowserChallenge ? 120 : isBrowserVerify ? 240 :
+        mode === 'challenge' ? 30 : 60;
       if (!(await rateAllowed(admin, secret, scope, 'ip:' + peerAddress(req), limit, 300))) {
         return json({ error: 'Слишком много попыток. Повторите позже.' }, 429);
       }
@@ -110,6 +127,45 @@ Deno.serve(async (req: Request) => {
   }
   try {
     const key = await getHmacKey();
+    if (isBrowserChallenge) {
+      const nonce = crypto.randomUUID();
+      const expiresAt = Date.now() + 90_000;
+      const agent = req.headers.get('user-agent') || '';
+      const signature = bytesToHex(new Uint8Array(
+        await crypto.subtle.sign('HMAC', key, browserSignedText(nonce, expiresAt, agent))
+      ));
+      return json({ nonce, expiresAt, difficultyBits: BROWSER_POW_BITS, signature });
+    }
+    if (isBrowserVerify) {
+      let data: Record<string, unknown>;
+      try {
+        const raw = await req.text();
+        if (raw.length > 1024) return json({ verified: false, error: 'Request too large' }, 413);
+        data = JSON.parse(raw);
+        if (!data || Array.isArray(data) || typeof data !== 'object') throw Error('Invalid payload');
+      } catch {
+        return json({ verified: false, error: 'Invalid JSON' }, 400);
+      }
+      const { nonce, signature, expiresAt, solution } = data;
+      if (typeof nonce !== 'string' || !/^[0-9a-f-]{36}$/i.test(nonce) ||
+          typeof signature !== 'string' || !/^[0-9a-f]{64}$/i.test(signature) ||
+          typeof expiresAt !== 'number' || !Number.isSafeInteger(expiresAt) ||
+          expiresAt < Date.now() || expiresAt > Date.now() + 91_000 ||
+          typeof solution !== 'number' || !Number.isSafeInteger(solution) ||
+          solution < 0 || solution > 250_000) {
+        return json({ verified: false, error: 'Invalid or expired challenge' }, 403);
+      }
+      const agent = req.headers.get('user-agent') || '';
+      const signed = await crypto.subtle.verify(
+        'HMAC', key, hexToBytes(signature), browserSignedText(nonce, expiresAt, agent)
+      );
+      if (!signed) return json({ verified: false, error: 'Invalid challenge signature' }, 403);
+      const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', browserProofText(nonce, solution)));
+      if (hash[0] !== 0 || (hash[1] & 0xf0) !== 0) {
+        return json({ verified: false, error: 'Incorrect proof' }, 403);
+      }
+      return json({ verified: true, requestId: nonce.slice(0, 8) });
+    }
     if (req.method === 'GET' && mode === 'challenge') {
       let a = randomInt(3, 12);
       let b = randomInt(2, 10);

@@ -1,0 +1,143 @@
+/* Automatic Syrex browser check, visually similar to a protection interstitial. */
+.syrex-browser-guard {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  min-height: 100dvh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  color: #f5f7fc;
+  background: #2c3547;
+  font-family: Arial, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 28px 20px 33px;
+}
+.syrex-guard-brand {
+  align-self: start;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: .2em;
+  font-weight: 700;
+  color: #c8d6f1;
+}
+.syrex-guard-brand-mark {
+  width: 29px;
+  height: 29px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid rgba(163,188,230,.36);
+  color: #e4edfd;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.syrex-guard-content {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0;
+  max-width: 700px;
+  text-align: center;
+  width: 100%;
+  margin-top: -30px;
+}
+.syrex-guard-content h1 {
+  max-width: 700px;
+  font-size: clamp(18px, 3.7vw, 23px);
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: .01em;
+}
+.syrex-guard-content h1 strong {
+  display: block;
+  font-family: "Courier New", monospace;
+  font-size: .88em;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: .13em;
+  overflow-wrap: anywhere;
+}
+.syrex-guard-content p {
+  font-size: clamp(15px, 3.4vw, 19px);
+  line-height: 1.65;
+  margin-top: 15px;
+  color: #f0f4fd;
+  max-width: 650px;
+}
+.syrex-guard-indicator {
+  margin-top: 42px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+}
+.syrex-guard-spinner {
+  display: block;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border: 7px solid transparent;
+  border-top-color: #168cfc;
+  border-right-color: #168cfc;
+  animation: syrex-guard-rotate .8s linear infinite;
+}
+@keyframes syrex-guard-rotate {
+  to { transform: rotate(360deg); }
+}
+.syrex-guard-done-icon, .syrex-guard-error-icon {
+  width: 64px;
+  height: 64px;
+  border: 3px solid #41cd93;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #41cd93;
+  font-size: 34px;
+}
+.syrex-guard-error-icon { color: #ffab98; border-color: #ffab98; }
+.syrex-guard-step {
+  min-height: 25px;
+  margin-top: 8px;
+  color: #9baac5;
+  font-size: 13px;
+  letter-spacing: .025em;
+}
+.syrex-guard-retry {
+  color: white;
+  margin-top: 23px;
+  background: #1e83e9;
+  border: 1px solid #4a9ded;
+  border-radius: 8px;
+  padding: 12px 21px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+}
+.syrex-guard-retry:hover { background: #1772ce; }
+.syrex-guard-retry:focus-visible { outline: 2px solid white; outline-offset: 4px; }
+.syrex-guard-metadata {
+  justify-self: center;
+  text-align: center;
+  font-family: "Courier New", monospace;
+  font-size: clamp(12px, 2.8vw, 15px);
+  line-height: 2.2;
+  letter-spacing: .05em;
+  font-variant-numeric: tabular-nums;
+}
+.syrex-guard-metadata span { color: #8d9bb5; }
+.syrex-guard-metadata strong { color: #d4ddec; font-weight: 400; }
+@media (max-width: 500px) {
+  .syrex-browser-guard { padding: 20px 18px 24px; }
+  .syrex-guard-brand { letter-spacing: .12em; }
+  .syrex-guard-content { margin-top: 0; }
+  .syrex-guard-indicator { margin-top: 28px; }
+  .syrex-guard-spinner { width: 60px; height: 60px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .syrex-guard-spinner { animation-duration: 1.8s; }
+}
