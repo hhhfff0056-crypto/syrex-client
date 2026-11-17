@@ -33,7 +33,6 @@ public final class SyrexLoginScreen extends Screen {
     private EditBox emailField;
     private EditBox passwordField;
     private Button signInButton;
-    private boolean consentToBind;
     private volatile boolean busy;
     private String status = "Enter your Syrex site account to sign in.";
     private boolean errorStatus;
@@ -70,39 +69,26 @@ public final class SyrexLoginScreen extends Screen {
             FormattedCharSequence.forward("*".repeat(value.length()), Style.EMPTY));
         addRenderableWidget(passwordField);
 
-        addRenderableWidget(Button.builder(
-            Component.literal(consentToBind
-                ? "[x] Bind this device to my account"
-                : "[ ] Bind this device to my account"),
-            button -> {
-                consentToBind = !consentToBind;
-                button.setMessage(Component.literal(consentToBind
-                    ? "[x] Bind this device to my account"
-                    : "[ ] Bind this device to my account"));
-                updateButton();
-            }
-        ).bounds(x, y + 61, 220, 20).build());
-
         signInButton = addRenderableWidget(Button.builder(
-            Component.literal("Sign in"),
+            Component.literal("Sign in & bind this PC"),
             button -> beginLogin()
-        ).bounds(x, y + 91, 220, 20).build());
+        ).bounds(x, y + 106, 220, 20).build());
 
         addRenderableWidget(Button.builder(
             Component.literal("Back"),
             button -> onClose()
-        ).bounds(x, y + 118, 220, 20).build());
+        ).bounds(x, y + 134, 220, 20).build());
 
         setInitialFocus(emailField);
         updateButton();
     }
 
     private void updateButton() {
-        if (signInButton != null) signInButton.active = !busy && consentToBind;
+        if (signInButton != null) signInButton.active = !busy;
     }
 
     private void beginLogin() {
-        if (busy || !consentToBind) return;
+        if (busy) return;
         String email = emailField.getValue().trim();
         char[] password = passwordField.getValue().toCharArray();
         passwordField.setValue("");
@@ -158,7 +144,10 @@ public final class SyrexLoginScreen extends Screen {
         graphics.drawCenteredString(font,
             "The same account you registered on the website",
             width / 2, height / 2 - 80, 0xBFC1C8);
-        graphics.drawCenteredString(font, status, width / 2, height / 2 + 81,
+        graphics.drawCenteredString(font, "Signing in binds this PC to your account", width / 2, height / 2 - 5, 0xD9D9D9);
+        graphics.drawCenteredString(font, "Another PC requires HWID reset", width / 2, height / 2 + 8, 0xD9D9D9);
+        graphics.drawCenteredString(font, "Only hashed HWID is sent", width / 2, height / 2 + 21, 0xA0A0A0);
+        graphics.drawCenteredString(font, status, width / 2, height / 2 + 105,
             errorStatus ? 0xFF6B6B : 0xBFC1C8);
     }
 
