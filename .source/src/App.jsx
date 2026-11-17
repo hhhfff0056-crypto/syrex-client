@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import SupabaseProfile from './pages/SupabaseProfile';
 import Keys from './pages/Keys';
+import Cosmetics from './pages/Cosmetics';
 import Tickets from './pages/Tickets';
 import Buy from './pages/Buy';
 import Products from './pages/Products';
@@ -36,7 +37,7 @@ const Home = () => (
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/keys' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
+  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
   const { isFading } = useLanguage();
 
   useEffect(() => {
@@ -140,6 +141,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<SupabaseProfile />} />
         <Route path="/keys" element={<Keys />} />
+        <Route path="/cosmetics" element={<Cosmetics />} />
         <Route path="/profile/tikets" element={<Tickets />} />
         <Route path="/buy" element={<Buy />} />
         <Route path="/products" element={<Products />} />
