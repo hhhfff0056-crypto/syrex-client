@@ -126,13 +126,16 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
     if (authError || !user?.id) return respond({ error: "Сеанс истёк. Войдите заново." }, 401);
     // Read role from Supabase Auth app_metadata fetched from server, not user_metadata.
-    const isDeveloper = String(user.app_metadata?.role || "").toUpperCase() === "DEV";
+    const serverRole = String(user.app_metadata?.role || "").toUpperCase();
+    const isDeveloper = serverRole === "DEV" || serverRole === "DEVELOPER";
+    const isAdmin = isDeveloper || serverRole === "ADMIN";
     let payload: Record<string, unknown> = {};
     try { payload = await req.json(); } catch { return respond({ error: "Неверный запрос." }, 400); }
     const action = payload.action;
     const limits: Record<string, [number, number]> = {
       status: [120, 60], download: [15, 60], "download-free": [30, 60],
-      redeem: [8, 600], generate: [10, 600], history: [45, 60]
+      redeem: [8, 600], generate: [10, 600], history: [45, 60],
+      "admin-users": [30, 60], "admin-subscription": [15, 60]
     };
     if (typeof action !== "string" || !limits[action]) {
       return respond({ error: "Неизвестная операция." }, 400);
@@ -151,7 +154,12 @@ Deno.serve(async (req: Request) => {
       if (dbError) throw dbError;
       const expiresAt = license?.expires_at || null;
       const licensed = Boolean(license) && (!expiresAt || new Date(expiresAt).getTime() > Date.now());
-      const active = licensed || isDeveloper;
+      const { data: override, error: overrideError } = await admin.from("syrex_admin_subscriptions")
+        .select("mode,expires_at").eq("user_id", user.id).maybeSingle();
+      if (overrideError) throw overrideError;
+      const overrideActive = override?.mode === "grant" &&
+        (!override.expires_at || new Date(override.expires_at).getTime() > Date.now());
+      const active = isDeveloper || (override?.mode === "revoke" ? false : licensed || overrideActive);
       // Both editions live in the private bucket. Neither has a public URL.
       const { data: objects, error: storageError } = await admin.storage.from(bucketName).list("", {
         limit: 100
@@ -173,7 +181,7 @@ Deno.serve(async (req: Request) => {
           active, licensed, isDeveloper,
           edition: active ? "PREMIUM" : "FREE",
           activatedAt: license?.activated_at || null,
-          expiresAt,
+          expiresAt: overrideActive ? override?.expires_at || null : expiresAt,
           fileReady: premiumFileReady,
           premiumFileReady, freeFileReady
         });
@@ -188,6 +196,80 @@ Deno.serve(async (req: Request) => {
         .createSignedUrl(downloadName, 60, { download: downloadName });
       if (linkError || !data?.signedUrl) throw linkError || new Error("Signed URL unavailable");
       return respond({ url: data.signedUrl, expiresInSeconds: 60 });
+    }
+
+    if (action === "admin-users") {
+      if (!isAdmin) return respond({ error: "Нет прав администратора." }, 403);
+      const page = Number(payload.page || 1);
+      if (!Number.isInteger(page) || page < 1 || page > 1000) {
+        return respond({ error: "Неверная страница." }, 400);
+      }
+      const { data: usersData, error: usersError } = await admin.auth.admin.listUsers({ page, perPage: 50 });
+      if (usersError) throw usersError;
+      const users = usersData?.users || [];
+      const ids = users.map((item) => item.id);
+      const [uids, licenses, overrides] = await Promise.all([
+        ids.length ? admin.from("syrex_user_uids").select("user_id,uid").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
+        ids.length ? admin.from("syrex_licenses").select("user_id,expires_at").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
+        ids.length ? admin.from("syrex_admin_subscriptions").select("user_id,mode,expires_at").in("user_id", ids) : Promise.resolve({ data: [], error: null })
+      ]);
+      if (uids.error || licenses.error || overrides.error) throw uids.error || licenses.error || overrides.error;
+      const uidMap = new Map((uids.data || []).map((row) => [row.user_id, row.uid]));
+      const licenseMap = new Map((licenses.data || []).map((row) => [row.user_id, row]));
+      const overrideMap = new Map((overrides.data || []).map((row) => [row.user_id, row]));
+      const now = Date.now();
+      return respond({
+        users: users.map((entry) => {
+          const existing = licenseMap.get(entry.id);
+          const override = overrideMap.get(entry.id);
+          const existingActive = Boolean(existing) && (!existing.expires_at || new Date(existing.expires_at).getTime() > now);
+          const granted = override?.mode === "grant" && (!override.expires_at || new Date(override.expires_at).getTime() > now);
+          const role = String(entry.app_metadata?.role || "USER").toUpperCase();
+          return {
+            id: entry.id, uid: uidMap.get(entry.id) ?? null,
+            username: String(entry.user_metadata?.username || entry.email?.split("@")[0] || "User").slice(0, 80),
+            email: entry.email || "", role, createdAt: entry.created_at,
+            premium: role === "DEV" || role === "DEVELOPER" ||
+              (override?.mode !== "revoke" && (existingActive || granted)),
+            expiresAt: granted ? override?.expires_at || null : existing?.expires_at || null,
+            overrideMode: override?.mode || null
+          };
+        }),
+        page, hasMore: users.length === 50
+      });
+    }
+
+    if (action === "admin-subscription") {
+      if (!isAdmin) return respond({ error: "Нет прав администратора." }, 403);
+      const target = typeof payload.userId === "string" ? payload.userId : "";
+      const mode = payload.mode;
+      if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/.test(target) || !["grant", "revoke", "reset"].includes(mode)) {
+        return respond({ error: "Неверные параметры." }, 400);
+      }
+      if (target === user.id) return respond({ error: "Нельзя изменять собственную подписку." }, 403);
+      const { data: targetData, error: targetError } = await admin.auth.admin.getUserById(target);
+      if (targetError || !targetData?.user) return respond({ error: "Аккаунт не найден." }, 404);
+      const targetRole = String(targetData.user.app_metadata?.role || "").toUpperCase();
+      if (["ADMIN", "DEV", "DEVELOPER"].includes(targetRole)) {
+        return respond({ error: "Нельзя изменять подписку администратора." }, 403);
+      }
+      if (mode === "reset") {
+        const { error } = await admin.from("syrex_admin_subscriptions").delete().eq("user_id", target);
+        if (error) throw error;
+      } else {
+        const days = Number(payload.days);
+        if (mode === "grant" && (![7, 30, 90, 365, 0].includes(days))) {
+          return respond({ error: "Недопустимый срок Premium." }, 400);
+        }
+        const expires = mode === "grant" && days > 0
+          ? new Date(Date.now() + days * 86400000).toISOString() : null;
+        const { error } = await admin.from("syrex_admin_subscriptions").upsert({
+          user_id: target, mode, expires_at: expires, updated_at: new Date().toISOString(),
+          updated_by: user.id
+        }, { onConflict: "user_id" });
+        if (error) throw error;
+      }
+      return respond({ success: true });
     }
 
     if (action === "redeem") {
