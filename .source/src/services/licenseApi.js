@@ -44,3 +44,7 @@ export const downloadLicensedClient = () => requestDownload('download');
 // Free downloads require a verified Syrex session, just like Premium.
 // Note: a publicly shared Dropbox URL cannot itself be made private.
 export const downloadFreeClient = () => requestDownload('download-free');
+
+export const listAdminUsers = (page = 1) => licenseRequest('admin-users', { page });
+export const manageAdminSubscription = (userId, mode, days = 0) =>
+  licenseRequest('admin-subscription', { userId, mode, days });

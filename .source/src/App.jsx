@@ -19,7 +19,7 @@ import Buy from './pages/Buy';
 import Products from './pages/Products';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
-import Admin from './pages/Admin';
+import AdminUsers from './pages/AdminUsers';
 import { useLanguage } from './context/LanguageContext';
 import { api } from './api';
 import { getAuthItem, setAuthItemAuto } from './utils/authStorage';
@@ -48,7 +48,7 @@ function VerifiedAdminRoute() {
   }, [access, navigate]);
   if (access === 'checking') return <main role="status" style={{ padding: '8rem 2rem', textAlign: 'center' }}>Проверяем права доступа...</main>;
   if (access !== 'granted') return null;
-  return <Admin />;
+  return <AdminUsers />;
 }
 
 
@@ -65,7 +65,7 @@ const Home = () => (
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
+  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/admin' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
   const { isFading } = useLanguage();
 
   useEffect(() => {

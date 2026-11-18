@@ -100,6 +100,7 @@ const SupabaseProfile = () => {
 
   const displayName = account?.user_metadata?.username || account?.email?.split('@')[0] || 'User';
   const accountRole = String(account?.app_metadata?.role || 'USER').toUpperCase();
+  const canManageUsers = ['ADMIN', 'DEV', 'DEVELOPER'].includes(accountRole);
   const joinedAt = account?.created_at ? new Date(account.created_at).toLocaleDateString('ru-RU') : '—';
 
   return (
@@ -161,6 +162,7 @@ const SupabaseProfile = () => {
                     {license?.active && !(license.premiumFileReady ?? license.fileReady) && <small className="profile-edition-hint">Файл Premium пока не загружен.</small>}
                   </div>
                 </div>
+                {canManageUsers && <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Управление пользователями</button>}
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/cosmetics')}><Sparkles size={16} /> Моя косметика</button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
                   <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : license?.active ? 'Моя лицензия Premium' : 'Перейти на Premium'}
