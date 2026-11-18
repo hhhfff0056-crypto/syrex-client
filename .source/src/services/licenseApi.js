@@ -41,8 +41,6 @@ const requestDownload = async (action) => {
 };
 
 export const downloadLicensedClient = () => requestDownload('download');
-// Dropbox's dl=1 URL starts the public Free download without another API request.
-const freeDownloadUrl = 'https://www.dropbox.com/scl/fi/4tgp4ajo8zhfzfra12e6u/syrex-1.21.11.jar?rlkey=tlizoehbcvz9s0sen8sjcndmy&dl=1';
-export const downloadFreeClient = () => {
-  window.location.assign(freeDownloadUrl);
-};
+// Free downloads require a verified Syrex session, just like Premium.
+// Note: a publicly shared Dropbox URL cannot itself be made private.
+export const downloadFreeClient = () => requestDownload('download-free');
