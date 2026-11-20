@@ -48,3 +48,18 @@
 @media(max-width:650px){.syrex-friends-page{padding:95px 13px 60px}.syrex-friends-header{gap:12px;flex-wrap:wrap}.syrex-friends-logo{width:49px;height:49px;flex-basis:49px}.syrex-friends-count{margin-left:auto}.syrex-friends-search-panel{padding:16px}.syrex-friends-search-form{flex-direction:column}.syrex-friends-search-form>button{width:100%}.syrex-friend-person{padding:13px 10px;gap:9px}.syrex-friend-avatar{width:39px;height:39px;flex-basis:39px}.syrex-friend-buttons .syrex-friend-accept{font-size:11px;padding:8px}.syrex-friend-remove{font-size:11px;padding:8px}.syrex-friends-tabs button{font-size:12px;padding:12px 7px}}
 
 .syrex-friends-waypoint-preview{width:52px;height:52px;object-fit:contain;flex:0 0 52px;filter:drop-shadow(0 4px 8px #ffcd0044)}
+
+.syrex-party-panel{margin-top:26px;padding:20px;border-radius:16px;border:1px solid #4d401f;background:linear-gradient(130deg,#1b180f,#111)}
+.syrex-party-panel h2{display:flex;align-items:center;gap:9px;font-weight:740;font-size:17px;margin:0 0 13px}
+.syrex-party-panel h2>svg{color:#ffd43d}
+.syrex-party-panel h2>span{font-weight:600;font-size:12px;color:#edcc51;border:1px solid #5b491d;border-radius:7px;padding:3px 8px}
+.syrex-party-panel p{font-size:12px;color:#b3b0a6;line-height:1.7;margin:11px 0 0}
+.syrex-party-panel code{background:#30270c;border-radius:5px;color:#ffe169;padding:2px 5px;white-space:nowrap}
+.syrex-party-members{display:flex;gap:9px;flex-wrap:wrap}
+.syrex-party-pill{font-size:12px;font-weight:650;color:#f6e6b8;background:#2c250f;border:1px solid #655121;border-radius:9px;padding:9px 11px}
+.syrex-party-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffce2d;margin-right:5px}
+.syrex-party-invite{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:12px;background:#211e14;border-radius:10px;border:1px solid #4b401f}
+.syrex-party-invite>strong{font-size:13px;margin-right:auto}
+.syrex-party-invite button{border:1px solid #8b711f;border-radius:8px;padding:8px 12px;font:inherit;font-size:12px;font-weight:700;color:#15120c;background:#ffda45;cursor:pointer}
+.syrex-party-invite button:last-child{background:#2c2b28;color:#ddd;border-color:#555}
+.syrex-party-invite button:disabled{opacity:.5;cursor:default}
