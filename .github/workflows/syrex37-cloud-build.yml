@@ -54,6 +54,11 @@ jobs:
             exit 2
           fi
           echo "BUILD_DIR=$(dirname "$BUILD_FILE")" >> "$GITHUB_ENV"
+      - name: Remove broken Rentgen and MotionBlur modules
+        run: |
+          python3 scripts/strip-rentgen-motionblur.py "$BUILD_DIR"
+          echo "Java sources after removal:"
+          find "$BUILD_DIR/src/main/java" -type f -name '*.java' | wc -l
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
