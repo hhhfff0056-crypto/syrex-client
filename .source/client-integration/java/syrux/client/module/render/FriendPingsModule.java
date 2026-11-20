@@ -5,6 +5,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.world.World;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.waypoint.TrackedWaypoint;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -33,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,7 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * The client obtains auth from SyrexAuthService and never sends credentials
  * other than its short-lived Supabase access token. Not server-authoritative.
  */
-@ModuleInfo(name = "Friend Pings", description = "Анимированные PNG-метки для друзей Syrex по клавише", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Friend Pings", description = "Минималистичные метки с координатами и расстоянием для пати Syrex", category = ModuleCategory.RENDER)
 public final class FriendPingsModule extends Module {
     private static final String API = "https://schhzjmsgdjicoiadoqx.supabase.co/functions/v1/syrex-social";
     private static final String KEY = "sb_publishable_ege-vbqEyqsq6HRn7DXtBQ_MQ8Op1UH";
@@ -54,12 +60,12 @@ public final class FriendPingsModule extends Module {
     private static FriendPingsModule instance;
 
     private final KeybindSetting pingKey = addSetting(new KeybindSetting(
-        "Метка друзьям", "Отправить метку друзьям на том же сервере. По умолчанию P.",
+        "Метка в пати", "Отправить метку участникам .party на том же сервере. По умолчанию P.",
         InputBinding.keyboardKey(80)));
     private final BooleanSetting showRing = addSetting(new BooleanSetting(
-        "Анимированный круг", "Золотистые кольца вокруг PNG-метки", true));
+        "Тонкое кольцо", "Минималистичное кольцо у метки", true));
     private final BooleanSetting showIcon = addSetting(new BooleanSetting(
-        "PNG-иконка", "Показывать жёлтый значок в точке метки", true));
+        "PNG-иконка", "Маленький жёлтый пин возле координат", true));
 
     private final Map<Long, Ping> pings = new ConcurrentHashMap<>();
     private final AtomicBoolean requesting = new AtomicBoolean(false);
@@ -68,12 +74,23 @@ public final class FriendPingsModule extends Module {
     private volatile String currentScope = "";
     private volatile String lastToken = "";
     private boolean keyWasHeld;
+    private final AtomicBoolean partyRequesting = new AtomicBoolean(false);
+    private volatile long nextPartyPollAt;
+    private volatile String seenPartyInvite = "";
 
     public static FriendPingsModule getInstance() {
         if (instance == null) instance = new FriendPingsModule();
         return instance;
     }
     private FriendPingsModule() { super(); }
+
+    // The existing Syrex CommandDispatcher already captures .party before chat
+    // is sent to the Minecraft server; its PartyCommand delegates here.
+    public void runPartyArgs(String[] args) {
+        String command = ".party";
+        if (args != null && args.length > 0) command += " " + String.join(" ", args);
+        executePartyCommand(command);
+    }
 
     private final EventListener<ClientTickEvent> tick = event -> {
         if (!event.isPre() || mc == null || mc.world == null || mc.player == null) {
@@ -82,20 +99,22 @@ public final class FriendPingsModule extends Module {
         }
         SyrexAuthService.Session session = SyrexAuthService.current();
         String host = publicHost(mc.getCurrentServerEntry() == null ? null : mc.getCurrentServerEntry().address);
-        String dimension = mc.world.getRegistryKey().getValue().toString();
+        String dimension = ((World) mc.world).getRegistryKey().getValue().toString();
         String token = session == null ? null : session.accessToken();
         String scope = host == null || mc.isInSingleplayer() ? "" : host + "|" + dimension;
         if (!Objects.equals(currentScope, scope) || !Objects.equals(lastToken, token)) {
             currentScope = scope;
             lastToken = token;
-            pings.clear(); lastSeenId = 0; nextPollAt = 0;
+            pings.clear(); lastSeenId = 0; nextPollAt = 0; nextPartyPollAt = 0; seenPartyInvite = "";
         }
         boolean pressed = pingKey.getBinding().method2749(mc.getWindow().getHandle());
         if (pressed && !keyWasHeld && mc.currentScreen == null) {
             if (token == null || scope.isEmpty()) {
                 chat("Для меток войди в Syrex и подключись к публичному серверу.");
             } else {
-                BlockPos at = mc.player.getBlockPos();
+                Entity self = mc.player;
+                BlockPos at = new BlockPos((int)Math.floor(self.getX()),
+                    (int)Math.floor(self.getY()), (int)Math.floor(self.getZ()));
                 HitResult hit = mc.crosshairTarget;
                 if (hit instanceof BlockHitResult block && hit.getType() == HitResult.Type.BLOCK) {
                     at = block.getBlockPos();
@@ -110,46 +129,72 @@ public final class FriendPingsModule extends Module {
             nextPollAt = now + 7500L;
             poll(token, host, dimension);
         }
+        if (token != null && now >= nextPartyPollAt && partyRequesting.compareAndSet(false, true)) {
+            nextPartyPollAt = now + 30000L;
+            pollPartyInvites(token);
+        }
     };
 
     private final EventListener<WorldRenderEvent> render = event -> {
         if (mc == null || mc.world == null || mc.player == null || pings.isEmpty()) return;
-        final Vec3d camera = mc.gameRenderer.getCamera().getCameraPos();
+        final Vec3d camera = ((TrackedWaypoint.YawProvider)mc.gameRenderer.getCamera()).getCameraPos();
         final MatrixStack matrices = event.method0647();
         final var buffers = mc.getBufferBuilders().getEntityVertexConsumers();
         final long ms = System.currentTimeMillis();
         for (Ping ping : pings.values()) {
             if (ping.expiresAt <= ms) continue;
-            Vec3d pos = new Vec3d(ping.x + .5, ping.y + 1.04, ping.z + .5).subtract(camera);
-            if (pos.lengthSquared() > 180.0 * 180.0) continue;
-            double t = ms * .001;
-            double scale = .92 + .08 * Math.sin(t * 4.8);
+            Vec3d target = new Vec3d(ping.x + .5, ping.y + 1.05, ping.z + .5);
+            Entity self = mc.player;
+            double dx=self.getX()-target.x, dy=self.getY()-target.y, dz=self.getZ()-target.z;
+            double distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (distance > 360) continue;
+            Vec3d ground = target.subtract(camera).add(0, -1.0, 0);
             if (showRing.isChecked()) {
-                VertexConsumer lines = buffers.getBuffer(RenderLayers.lines());
-                ring(lines, matrices, pos.add(0, -.95, 0), .70 * scale, 0xEAFFD53D, 2.7f, t * .72);
-                ring(lines, matrices, pos.add(0, -.92, 0), .92 * scale, 0x8CFFFFFF, 2.1f, -t * .53);
-                segment(lines, matrices, pos.add(0,-.85,0), pos.add(0,.1+.12*Math.sin(t*3.1),0), 0xA8FFE169, 2f);
+                double pulse = 0.95 + 0.055 * Math.sin(ms * .0025);
+                ring(buffers.getBuffer(RenderLayers.lines()), matrices, ground,
+                    .38 * pulse, 0xAADDAB26, 1.45f, ms * .00016);
             }
+
+            // Render the label as a camera-facing 3D panel; distance is
+            // recomputed every frame, while the coordinates remain fixed.
+            Vec3d label = target.subtract(camera).add(0, .66 + .035 * Math.sin(ms * .002), 0);
+            float scale = (float)(0.019 + Math.min(distance, 150) * .00012);
+            matrices.push();
+            matrices.translate(label.x, label.y, label.z);
+            matrices.multiply(mc.gameRenderer.getCamera().getRotation());
+            matrices.scale(-scale, -scale, scale);
+
+            String title = ping.nickname + "  •  " + Math.round(distance) + "м";
+            String coords = "X " + ping.x + "   Y " + ping.y + "   Z " + ping.z;
+            TextRenderer textRenderer = mc.textRenderer;
+            float lineA = -textRenderer.getWidth(title) / 2.0f;
+            float lineB = -textRenderer.getWidth(coords) / 2.0f;
+            textRenderer.draw(title, lineA, -39, 0xFFFFD83A, true,
+                matrices.peek().getPositionMatrix(), buffers,
+                TextRenderer.TextLayerType.SEE_THROUGH, 0x850C0C0C, 0xF000F0);
+            textRenderer.draw(coords, lineB, -27, 0xFFEAEAEA, true,
+                matrices.peek().getPositionMatrix(), buffers,
+                TextRenderer.TextLayerType.SEE_THROUGH, 0x850C0C0C, 0xF000F0);
             if (showIcon.isChecked()) {
                 VertexConsumer quad = buffers.getBuffer(RenderLayers.entityTranslucent(ICON));
-                double size = .45 * scale;
-                double y = pos.y + .05 + .14 * Math.sin(t * 2.6);
-                float x = (float)pos.x, z=(float)pos.z, h=(float)y, r=(float)size;
-                // PNG lies horizontally above the marked block, with a pulsing
-                // height and rings. The glowing asset is transparent RGBA.
-                int alpha = (int)(220 + 30*Math.sin(t*3));
-                int rgba = ((alpha & 255) << 24) | 0xFFFFFF;
-                quad.vertex(matrices.peek(),x-r,h,z-r).color(rgba).texture(0,0).overlay(0).light(0xF000F0).normal(0,1,0);
-                quad.vertex(matrices.peek(),x-r,h,z+r).color(rgba).texture(0,1).overlay(0).light(0xF000F0).normal(0,1,0);
-                quad.vertex(matrices.peek(),x+r,h,z+r).color(rgba).texture(1,1).overlay(0).light(0xF000F0).normal(0,1,0);
-                quad.vertex(matrices.peek(),x+r,h,z-r).color(rgba).texture(1,0).overlay(0).light(0xF000F0).normal(0,1,0);
+                // A tiny, minimal PNG instead of the old large ornament.
+                float iconSize = 7.5f;
+                quad.vertex(matrices.peek(), -iconSize, -17, 0).color(0xFFFFFFFF)
+                    .texture(0, 0).overlay(0).light(0xF000F0).normal(0, 0, 1);
+                quad.vertex(matrices.peek(), -iconSize, -2, 0).color(0xFFFFFFFF)
+                    .texture(0, 1).overlay(0).light(0xF000F0).normal(0, 0, 1);
+                quad.vertex(matrices.peek(), iconSize, -2, 0).color(0xFFFFFFFF)
+                    .texture(1, 1).overlay(0).light(0xF000F0).normal(0, 0, 1);
+                quad.vertex(matrices.peek(), iconSize, -17, 0).color(0xFFFFFFFF)
+                    .texture(1, 0).overlay(0).light(0xF000F0).normal(0, 0, 1);
             }
+            matrices.pop();
         }
         buffers.draw();
     };
 
     @Override protected void onDisable() {
-        pings.clear(); nextPollAt=0; keyWasHeld=false;
+        pings.clear(); nextPollAt=0; nextPartyPollAt=0; keyWasHeld=false;
     }
 
     private static void chat(String msg) {
@@ -197,13 +242,13 @@ public final class FriendPingsModule extends Module {
                 JsonObject params = new JsonObject();
                 params.addProperty("server",host);
                 params.addProperty("dimension",dim);
-                params.addProperty("x",where.getX());
-                params.addProperty("y",where.getY());
-                params.addProperty("z",where.getZ());
+                params.addProperty("x",((Vec3i)where).getX());
+                params.addProperty("y",((Vec3i)where).getY());
+                params.addProperty("z",((Vec3i)where).getZ());
                 JsonObject reply = post(token,"ping-send",params);
                 int delivered = reply.has("sent") ? reply.get("sent").getAsInt() : 0;
-                chat(delivered == 0 ? "На сервере нет друзей Syrex, которым можно отправить метку." :
-                    "Метка отправлена друзьям: " + delivered);
+                chat(delivered == 0 ? "Нет участников пати на вашем сервере. Пригласи: .party <ник>" :
+                    "Метка отправлена участникам пати: " + delivered);
             } catch (Exception e) { chat("Не удалось отправить метку: " + e.getMessage()); }
         });
     }
@@ -234,6 +279,86 @@ public final class FriendPingsModule extends Module {
             } catch (Exception ignored) {
                 // Network failure must never block the client thread.
             } finally { requesting.set(false); }
+        });
+    }
+
+    private void executePartyCommand(String input) {
+        String[] parts = input.trim().split("\\s+");
+        String mode = parts.length == 1 ? "list" : parts[1].toLowerCase(Locale.ROOT);
+        String action;
+        JsonObject params = new JsonObject();
+        if (parts.length == 1 || mode.equals("list") || mode.equals("info") || mode.equals("status")) {
+            action = "party-status";
+        } else if (mode.equals("accept")) {
+            action = "party-accept";
+        } else if (mode.equals("decline") || mode.equals("reject")) {
+            action = "party-decline";
+        } else if (mode.equals("leave") || mode.equals("disband")) {
+            action = "party-leave";
+        } else if (mode.equals("kick") && parts.length == 3) {
+            action = "party-kick";
+            params.addProperty("nickname", parts[2]);
+        } else if (parts.length == 2 && mode.matches("[a-z0-9_]{3,32}")) {
+            action = "party-invite";
+            params.addProperty("nickname", parts[1]);
+        } else {
+            chat(".party <ник> | accept | decline | list | kick <ник> | leave");
+            return;
+        }
+        SyrexAuthService.Session session = SyrexAuthService.current();
+        if (session == null || session.accessToken() == null) {
+            chat("Войдите в аккаунт Syrex для работы с пати.");
+            return;
+        }
+        String token = session.accessToken();
+        CompletableFuture.runAsync(() -> {
+            try {
+                JsonObject result = post(token, action, params);
+                switch (action) {
+                    case "party-status" -> showPartyStatus(result);
+                    case "party-invite" -> chat("Приглашение отправлено: " + result.get("invited").getAsString());
+                    case "party-accept" -> chat("Вы вступили в пати. Метки доступны по клавише P.");
+                    case "party-decline" -> chat("Приглашение отклонено.");
+                    case "party-leave" -> chat(result.has("disbanded") ? "Пати распущено." : "Вы вышли из пати.");
+                    case "party-kick" -> chat("Игрок удалён из пати.");
+                    default -> chat("Пати обновлено.");
+                }
+                nextPartyPollAt = 0;
+            } catch (Exception e) { chat("Пати: " + e.getMessage()); }
+        });
+    }
+
+    private static void showPartyStatus(JsonObject result) {
+        if (result.has("party") && result.get("party").isJsonObject()) {
+            JsonObject party = result.getAsJsonObject("party");
+            JsonArray members = party.getAsJsonArray("members");
+            StringBuilder list = new StringBuilder();
+            for (var entry : members) {
+                if (list.length() > 0) list.append(", ");
+                list.append(entry.getAsJsonObject().get("nickname").getAsString());
+            }
+            chat("Пати [" + members.size() + "/6]: " + list);
+        } else chat("Нет активной пати. Пригласить друга: .party <ник с сайта>");
+        JsonArray invitations = result.has("invites") ? result.getAsJsonArray("invites") : new JsonArray();
+        if (!invitations.isEmpty()) {
+            chat("Приглашение от " + invitations.get(0).getAsJsonObject().get("from").getAsString()
+                + ". Вступить: .party accept, отклонить: .party decline");
+        }
+    }
+
+    private void pollPartyInvites(String token) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                JsonObject result = post(token, "party-status", new JsonObject());
+                JsonArray invites = result.has("invites") ? result.getAsJsonArray("invites") : new JsonArray();
+                String current = invites.isEmpty() ? "" : invites.get(0).getAsJsonObject().get("from").getAsString();
+                if (!current.isEmpty() && !current.equals(seenPartyInvite)) {
+                    chat(current + " приглашает в пати! Принять: .party accept");
+                }
+                seenPartyInvite = current;
+            } catch (Exception ignored) {
+                // Background polls may fail if the game is offline.
+            } finally { partyRequesting.set(false); }
         });
     }
 
