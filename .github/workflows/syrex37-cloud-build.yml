@@ -1,7 +1,5 @@
 name: Syrex 3.7 source build (no aura changes)
 on:
-  push:
-    paths: [".github/workflows/syrex37-cloud-build.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,7 +16,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Download user-provided public Syrex 3.7 archive
         env:
-          SOURCE_URL: 'https://uc9245fbb1685b05a31c78096145.dl.dropboxusercontent.com/cd/0/get/DMSG_WW_PQK_qZc8fcIq12HitF70oyXNaRy6LUTkoJTorSa1PMkNM9pjrVjHRJs9IwGWK-IxHOl5lRVOY_3MeEOlcyoARZ2LFe_nE8v81CDanYJhWVrUomMtqYY8bKDqn0_pebKx8juVz3NbBK0rTZP0bpwjx5XENO-WvS7mg2s86w/file?c_luid=54ddfba7'
+          SOURCE_URL: 'https://www.dropbox.com/scl/fi/gr006577j5usj1l1ugdhx/syrex-3.7.zip?rlkey=mxgtjaqkvidze9xyhtm3cvksj&dl=1'
         run: |
           curl --fail --location --retry 2 --connect-timeout 20 --max-time 650 -o /tmp/syrex-3.7-original.zip "$SOURCE_URL"
           file /tmp/syrex-3.7-original.zip
