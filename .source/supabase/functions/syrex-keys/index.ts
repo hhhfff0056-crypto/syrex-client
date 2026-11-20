@@ -217,6 +217,12 @@ Deno.serve(async (req: Request) => {
       const uidMap = new Map((uids.data || []).map((row) => [row.user_id, row.uid]));
       const licenseMap = new Map((licenses.data || []).map((row) => [row.user_id, row]));
       const overrideMap = new Map((overrides.data || []).map((row) => [row.user_id, row]));
+      const { data: deviceBindings, error: deviceError } = isDeveloper && ids.length
+        ? await admin.from("syrex_device_bindings")
+          .select("user_id,fingerprint_digest,bound_at,last_seen_at").in("user_id", ids)
+        : { data: [], error: null };
+      if (deviceError) throw deviceError;
+      const deviceMap = new Map((deviceBindings || []).map((item) => [item.user_id, item]));
       const now = Date.now();
       return respond({
         users: users.map((entry) => {
@@ -229,6 +235,11 @@ Deno.serve(async (req: Request) => {
             id: entry.id, uid: uidMap.get(entry.id) ?? null,
             username: String(entry.user_metadata?.username || entry.email?.split("@")[0] || "User").slice(0, 80),
             email: entry.email || "", role, createdAt: entry.created_at,
+            device: isDeveloper && deviceMap.has(entry.id) ? {
+              fingerprint: deviceMap.get(entry.id).fingerprint_digest.slice(0, 16),
+              boundAt: deviceMap.get(entry.id).bound_at,
+              lastSeenAt: deviceMap.get(entry.id).last_seen_at
+            } : null,
             premium: role === "DEV" || role === "DEVELOPER" ||
               (override?.mode !== "revoke" && (existingActive || granted)),
             expiresAt: granted ? override?.expires_at || null : existing?.expires_at || null,
