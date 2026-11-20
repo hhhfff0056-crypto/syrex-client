@@ -278,10 +278,15 @@ Deno.serve(async req => {
     if (action === "party-invite") {
       const name = String(payload.nickname || "").trim();
       if (!/^[a-z0-9_]{3,32}$/i.test(name)) return respond({error:"Введите ник Syrex (3–32 символа)."},400);
-      const {data: profile,error:profileErr} = await admin.from("syrex_social_profiles")
-        .select("user_id,nickname").ilike("nickname",name).limit(2).maybeSingle();
-      if(profileErr) throw profileErr;
-      if(!profile || profile.user_id===user.id) return respond({error:"Друг не найден на сайте."},404);
+      // Find by exact case-insensitive nickname among accepted friends.
+      // LIKE/ILIKE would treat underscores in Minecraft nicknames as wildcards.
+      const acceptedFriends = (await friendships()).filter(x => x.status === "accepted");
+      const acceptedIds = acceptedFriends.map(x => x.low_user === user.id ? x.high_user : x.low_user);
+      const acceptedNames = await related(acceptedIds);
+      const targetId = acceptedIds.find(id =>
+        acceptedNames.get(id)?.nickname.toLowerCase() === name.toLowerCase());
+      const profile = targetId ? { user_id: targetId, nickname: acceptedNames.get(targetId)!.nickname } : null;
+      if(!profile) return respond({error:"Друг с таким ником не найден. Добавьте его на сайте Syrex."},404);
       if(!(await checkFriends(profile.user_id))) return respond({error:"Добавьте игрока в друзья через сайт Syrex."},403);
       const {data:alreadyInParty,error:alreadyErr} = await admin.from("syrex_party_members")
         .select("user_id").eq("user_id",profile.user_id).maybeSingle();
@@ -365,10 +370,12 @@ Deno.serve(async req => {
         return respond({error:"Удалять игроков может только лидер пати."},403);
       const name=String(payload.nickname||"").trim();
       if(!/^[a-z0-9_]{3,32}$/i.test(name)) return respond({error:"Укажите ник игрока."},400);
-      const {data:profile,error:findErr}=await admin.from("syrex_social_profiles")
-        .select("user_id").ilike("nickname",name).maybeSingle();
-      if(findErr) throw findErr;
-      if(!profile || profile.user_id===user.id) return respond({error:"Игрок не найден."},404);
+      const memberIds = (await partyMembers(party.id)).filter(id => id !== user.id);
+      const membersInfo = await related(memberIds);
+      const targetId = memberIds.find(id =>
+        membersInfo.get(id)?.nickname.toLowerCase() === name.toLowerCase());
+      if(!targetId) return respond({error:"Игрок не найден в вашей пати."},404);
+      const profile = { user_id: targetId };
       const {data:deleted,error:removeErr}=await admin.from("syrex_party_members")
         .delete().eq("party_id",party.id).eq("user_id",profile.user_id)
         .select("user_id");
