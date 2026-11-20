@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound, Sparkles } from 'lucide-react';
+import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound, Sparkles, Users } from 'lucide-react';
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
 import { downloadFreeClient, downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
@@ -164,6 +164,7 @@ const SupabaseProfile = () => {
                 </div>
                 {canManageUsers && <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Управление пользователями</button>}
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/cosmetics')}><Sparkles size={16} /> Моя косметика</button>
+                <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/online')}><Users size={16} /> Кто сейчас в сети</button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/keys')}>
                   <KeyRound size={16} /> {accountRole === 'DEV' ? 'Управление ключами' : license?.active ? 'Моя лицензия Premium' : 'Перейти на Premium'}
                 </button>
