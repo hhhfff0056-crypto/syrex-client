@@ -68,48 +68,6 @@ function App() {
   const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/admin' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
   const { isFading } = useLanguage();
 
-  useEffect(() => {
-    const isEditable = (target) => {
-      if (!target) return false;
-      const tag = target.tagName ? target.tagName.toLowerCase() : '';
-      return tag === 'input' || tag === 'textarea' || target.isContentEditable;
-    };
-    const blockContext = (e) => {
-      if (isEditable(e.target)) return;
-      e.preventDefault();
-    };
-    const blockCopy = (e) => {
-      if (isEditable(e.target)) return;
-      e.preventDefault();
-    };
-    const blockKeys = (e) => {
-      const key = String(e.key || '').toLowerCase();
-      const ctrl = e.ctrlKey || e.metaKey;
-      if (key === 'f12') {
-        e.preventDefault();
-        return;
-      }
-      if (ctrl && ['s', 'u', 'p'].includes(key)) {
-        e.preventDefault();
-        return;
-      }
-      if (ctrl && e.shiftKey && ['i', 'j', 'c'].includes(key)) {
-        e.preventDefault();
-      }
-    };
-    document.addEventListener('contextmenu', blockContext);
-    document.addEventListener('copy', blockCopy);
-    document.addEventListener('cut', blockCopy);
-    document.addEventListener('dragstart', blockCopy);
-    document.addEventListener('keydown', blockKeys);
-    return () => {
-      document.removeEventListener('contextmenu', blockContext);
-      document.removeEventListener('copy', blockCopy);
-      document.removeEventListener('cut', blockCopy);
-      document.removeEventListener('dragstart', blockCopy);
-      document.removeEventListener('keydown', blockKeys);
-    };
-  }, []);
 
   useEffect(() => {
     const userId = getAuthItem('userId');
