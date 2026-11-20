@@ -24,6 +24,7 @@ import { useLanguage } from './context/LanguageContext';
 import { api } from './api';
 import { getAuthItem, setAuthItemAuto } from './utils/authStorage';
 import { getCurrentUser } from './auth/supabaseAuth';
+import { pingSitePresence } from './services/licenseApi';
 
 function VerifiedAdminRoute() {
   const navigate = useNavigate();
@@ -65,6 +66,19 @@ const Home = () => (
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  useEffect(() => {
+    const ping = () => {
+      if (document.visibilityState !== 'visible' || !getAuthItem('authToken')) return;
+      pingSitePresence().catch(() => {});
+    };
+    ping();
+    const interval = setInterval(ping, 60000);
+    document.addEventListener('visibilitychange', ping);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', ping);
+    };
+  }, []);
   const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/admin' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
   const { isFading } = useLanguage();
 
