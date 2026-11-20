@@ -1,0 +1,73 @@
+name: Syrex 3.7 source build (no aura changes)
+on:
+  push:
+    paths: [".github/workflows/syrex37-cloud-build.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Download user-provided public Syrex 3.7 archive
+        env:
+          SOURCE_URL: https://www.dropbox.com/scl/fi/gr006577j5usj1l1ugdhx/syrex-3.7.zip?rlkey=mxgtjaqkvidze9xyhtm3cvksj&dl=1
+        run: |
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 650 -o /tmp/syrex-3.7-original.zip "$SOURCE_URL"
+          file /tmp/syrex-3.7-original.zip
+          unzip -tq /tmp/syrex-3.7-original.zip >/tmp/zipcheck.txt
+          python3 - <<'PY'
+          import zipfile
+          z=zipfile.ZipFile('/tmp/syrex-3.7-original.zip')
+          names=z.namelist()
+          print('Archive entries:',len(names))
+          print('Java source files:',sum(x.lower().endswith('.java') for x in names))
+          print('Gradle projects:',[x for x in names if x.endswith(('build.gradle','build.gradle.kts','settings.gradle'))][:20])
+          print('First 40 entries:',names[:40])
+          PY
+      - name: Extract and locate build
+        run: |
+          mkdir -p /tmp/syrex37-project
+          python3 - <<'PY'
+          import zipfile,os
+          root='/tmp/syrex37-project'
+          with zipfile.ZipFile('/tmp/syrex-3.7-original.zip') as z:
+            for item in z.infolist():
+              path=os.path.abspath(os.path.join(root,item.filename))
+              if not (path==root or path.startswith(root+os.sep)): raise RuntimeError('Unsafe archive path')
+              if item.is_dir(): continue
+              os.makedirs(os.path.dirname(path),exist_ok=True)
+              with z.open(item) as src,open(path,'wb') as dst:
+                while (b:=src.read(1024*1024)): dst.write(b)
+          PY
+          find /tmp/syrex37-project -name 'build.gradle*' -print | head -20
+          BUILD_FILE="$(find /tmp/syrex37-project -type f \( -name build.gradle -o -name build.gradle.kts \) -print -quit)"
+          if [ -z "$BUILD_FILE" ]; then
+            echo 'ERROR: user-supplied Dropbox ZIP contains no Gradle build.gradle; need exported Gradle project.'
+            exit 2
+          fi
+          echo "BUILD_DIR=$(dirname "$BUILD_FILE")" >> "$GITHUB_ENV"
+      - name: Compile Syrex 3.7
+        working-directory: ${{ env.BUILD_DIR }}
+        run: |
+          if [ -f gradlew ]; then chmod +x ./gradlew; ./gradlew --no-daemon clean build --stacktrace; else gradle --no-daemon clean build --stacktrace; fi
+      - name: Collect built JAR
+        if: success()
+        run: |
+          find "$BUILD_DIR/build/libs" -name '*.jar' -type f -size +50k -print
+          mkdir -p /tmp/syrex37-output
+          find "$BUILD_DIR/build/libs" -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' -exec cp {} /tmp/syrex37-output/ \;
+          test -n "$(ls -A /tmp/syrex37-output)"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: syrex-3.7-built-jars
+          path: /tmp/syrex37-output/*.jar
+          if-no-files-found: error
