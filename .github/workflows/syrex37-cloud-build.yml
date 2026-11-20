@@ -1,5 +1,7 @@
 name: Syrex 3.7 source build (no aura changes)
 on:
+  push:
+    paths: [".github/workflows/syrex37-cloud-build.yml"]
   workflow_dispatch:
 permissions:
   contents: read
