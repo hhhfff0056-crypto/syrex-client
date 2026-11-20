@@ -43,7 +43,7 @@ const verifyCaptcha = async (captchaToken) => {
   }
 };
 
-const redirectUrl = () => window.location.origin + import.meta.env.BASE_URL + 'login';
+const redirectUrl = (recovery = false) => window.location.origin + import.meta.env.BASE_URL + 'login' + (recovery ? '?recovery=1' : '');
 
 const request = async (path, { method = 'GET', payload, accessToken } = {}) => {
   if (!authConfigured) throw new Error('Авторизация пока не подключена к серверу.');
@@ -183,9 +183,18 @@ let emailRedirectPromise = null;
 export const completeEmailRedirect = async () => {
   if (emailRedirectPromise) return emailRedirectPromise;
   const fragment = window.location.hash.slice(1);
-  if (!fragment.includes('access_token=') && !fragment.includes('error=')) return null;
-  window.history.replaceState(null, '', window.location.pathname + window.location.search);
-  const params = new URLSearchParams(fragment);
+  const hashParams = new URLSearchParams(fragment);
+  const queryParams = new URLSearchParams(window.location.search);
+  const params = hashParams.has('access_token') || hashParams.has('error') ? hashParams : queryParams;
+  if (!params.has('access_token') && !params.has('error') && !params.has('token_hash')) return null;
+  const isRecovery = params.get('type') === 'recovery' || queryParams.get('recovery') === '1';
+  window.history.replaceState(null, '', window.location.pathname + (isRecovery ? '?recovery=1' : ''));
+  if (params.has('token_hash')) {
+    const result = await request('verify', { method: 'POST', payload: { token_hash: params.get('token_hash'), type: params.get('type') || 'recovery' } });
+    if (!result.access_token || !result.refresh_token) throw new Error('Ссылка восстановления недействительна или устарела.');
+    persistSession(result, true);
+    return { user: result.user, isRecovery };
+  }
   if (params.get('error')) throw new Error(params.get('error_description') || 'Ссылка подтверждения недействительна.');
   const accessToken = params.get('access_token');
   const refreshToken = params.get('refresh_token');
@@ -198,14 +207,14 @@ export const completeEmailRedirect = async () => {
       expires_in: Number(params.get('expires_in')) || 3600,
       user
     }, true);
-    return { user, isRecovery: params.get('type') === 'recovery' };
+    return { user, isRecovery };
   })();
   return emailRedirectPromise;
 };
 
 export const sendRecovery = async (email, captchaToken = '') => {
   await verifyCaptcha(captchaToken);
-  return request('recover?redirect_to=' + encodeURIComponent(redirectUrl()), {
+  return request('recover?redirect_to=' + encodeURIComponent(redirectUrl(true)), {
     method: 'POST',
     payload: {
       email: email.trim().toLowerCase(),
