@@ -135,7 +135,9 @@ Deno.serve(async (req: Request) => {
     const limits: Record<string, [number, number]> = {
       status: [120, 60], download: [15, 60], "download-free": [30, 60],
       redeem: [8, 600], generate: [10, 600], history: [45, 60],
-      "admin-users": [30, 60], "admin-subscription": [15, 60], "presence": [4, 60]
+      "admin-users": [30, 60], "admin-subscription": [15, 60],
+      "presence": [6, 60], "online-users": [10, 60],
+      "presence-visibility": [6, 60], "presence-offline": [6, 60]
     };
     if (typeof action !== "string" || !limits[action]) {
       return respond({ error: "Неизвестная операция." }, 400);
@@ -147,12 +149,68 @@ Deno.serve(async (req: Request) => {
       return respond({ error: "Слишком много запросов. Повторите позже." }, 429);
     }
 
+    // Public-facing online nickname is deliberately decoupled from account email,
+    // user ID, client device, and any sensitive user profile information.
+    const rawName = user.user_metadata?.username;
+    const displayName = typeof rawName === "string" && /^[A-Za-z0-9_]{3,32}$/.test(rawName)
+      ? rawName : "Игрок Syrex";
+
     if (action === "presence") {
       const { error } = await admin.from("syrex_site_presence")
-        .upsert({ user_id: user.id, last_seen_at: new Date().toISOString() }, { onConflict: "user_id" });
+        .upsert({
+          user_id: user.id, display_name: displayName,
+          last_seen_at: new Date().toISOString()
+        }, { onConflict: "user_id" });
       if (error) throw error;
       return respond({ ok: true });
     }
+    if (action === "presence-offline") {
+      const { error } = await admin.from("syrex_site_presence")
+        .update({ last_seen_at: "1970-01-01T00:00:00.000Z" })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return respond({ ok: true });
+    }
+    if (action === "presence-visibility") {
+      if (typeof payload.enabled !== "boolean") {
+        return respond({ error: "Нужно указать enabled: true или false." }, 400);
+      }
+      const { data: row, error: currentError } = await admin.from("syrex_site_presence")
+        .select("user_id").eq("user_id", user.id).maybeSingle();
+      if (currentError) throw currentError;
+      const fields = {
+        display_name: displayName, show_online: payload.enabled,
+        last_seen_at: new Date().toISOString()
+      };
+      const { error } = row
+        ? await admin.from("syrex_site_presence").update(fields).eq("user_id", user.id)
+        : await admin.from("syrex_site_presence").insert({ user_id: user.id, ...fields });
+      if (error) throw error;
+      return respond({ ok: true, visible: payload.enabled });
+    }
+    if (action === "online-users") {
+      // Visibility expires automatically after 150 seconds without a heartbeat.
+      // Only logged-in members may fetch the list; never return emails or IDs.
+      const cutoff = new Date(Date.now() - 150000).toISOString();
+      const { data: rows, count, error } = await admin.from("syrex_site_presence")
+        .select("user_id,display_name", { count: "exact" })
+        .eq("show_online", true)
+        .gte("last_seen_at", cutoff)
+        .order("last_seen_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const { data: mine, error: mineError } = await admin.from("syrex_site_presence")
+        .select("show_online,last_seen_at").eq("user_id", user.id).maybeSingle();
+      if (mineError) throw mineError;
+      return respond({
+        count: count || 0,
+        members: (rows || []).map((row) => ({
+          nickname: row.display_name, me: row.user_id === user.id
+        })),
+        visible: mine?.show_online !== false
+      });
+    }
+
     if (action === "status" || action === "download" || action === "download-free") {
       const { data: license, error: dbError } = await admin.from("syrex_licenses")
         .select("expires_at,activated_at")
