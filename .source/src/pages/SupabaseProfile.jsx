@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Download, LogOut, Mail, ShieldCheck, User, UserCircle, KeyRound, Sparkles, Users } from 'lucide-react';
 import { getCurrentUser, signOut } from '../auth/supabaseAuth';
 import { getAuthItem, setAuthItemAuto } from '../utils/authStorage';
-import { downloadFreeClient, downloadLicensedClient, getLicenseStatus } from '../services/licenseApi';
+import { downloadFreeClient, downloadLicensedClient, getLicenseStatus, markSiteOffline } from '../services/licenseApi';
 import { getDeviceStatus } from '../services/deviceApi';
 import './Profile.css';
 import './SupabaseProfile.css';
@@ -44,6 +44,7 @@ const SupabaseProfile = () => {
   }, [navigate]);
 
   const logout = async () => {
+    try { await markSiteOffline(); } catch { /* Heartbeat expiry is the fallback. */ }
     await signOut();
     navigate('/', { replace: true });
   };
