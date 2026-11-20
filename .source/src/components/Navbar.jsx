@@ -61,6 +61,9 @@ const Navbar = () => {
     };
   }, []);
 
+  const telegramLink = 'https://t.me/+EkTnnFIbiIhhZWUx';
+  const telegramIcon = <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M21.944 4.666c.233-1.094-.395-1.522-1.293-1.188L2.397 10.52c-1.246.486-1.228 1.18-.227 1.487l4.684 1.462 1.81 5.614c.222.613.112.856.756.856.497 0 .716-.226.994-.494l2.39-2.326 4.97 3.674c.915.505 1.575.244 1.803-.85L21.944 4.666ZM7.59 13.132l10.963-6.916c.548-.332 1.052-.154.64.212L10.08 14.65l-.354 3.763-2.136-5.281Z"/></svg>;
+
   const navItems = [
     { to: '/', label: t.nav.home, icon: <span className="icon-grid">⌘</span> },
     { to: '/#features', label: t.nav.features, icon: <Sparkles size={15} /> },
@@ -122,6 +125,7 @@ const Navbar = () => {
         <div className="auth-action">{authControl()}</div>
 
         <div className="nav-right-actions">
+          <a href={telegramLink} target="_blank" rel="noopener noreferrer" aria-label="Telegram Syrex" title="Telegram Syrex" className="theme-toggle" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none", color: "inherit" }}>{telegramIcon}</a>
           <button
             className="theme-toggle"
             type="button"
