@@ -304,9 +304,12 @@ Deno.serve(async (req: Request) => {
       if (deviceError) throw deviceError;
       const deviceMap = new Map((deviceBindings || []).map((item) => [item.user_id, item]));
       const { data: presence, error: presenceError } = await admin.from("syrex_site_presence")
-        .select("user_id,last_seen_at").in("user_id", ids);
-      if (presenceError) throw presenceError;
-      const presenceMap = new Map((presence || []).map((item) => [item.user_id, item.last_seen_at]));
+        .select("user_id,last_seen_at,show_online,show_server").in("user_id", ids);
+      const { data: gamePresence, error: gameError } = await admin.from("syrex_game_presence")
+        .select("user_id,last_seen_at,server_host").in("user_id", ids);
+      if (presenceError || gameError) throw presenceError || gameError;
+      const presenceMap = new Map((presence || []).map((item) => [item.user_id, item]));
+      const gameMap = new Map((gamePresence || []).map((item) => [item.user_id, item]));
       const now = Date.now();
       return respond({
         users: users.map((entry) => {
@@ -315,12 +318,20 @@ Deno.serve(async (req: Request) => {
           const existingActive = Boolean(existing) && (!existing.expires_at || new Date(existing.expires_at).getTime() > now);
           const granted = override?.mode === "grant" && (!override.expires_at || new Date(override.expires_at).getTime() > now);
           const role = String(entry.app_metadata?.role || "USER").toUpperCase();
+          const site = presenceMap.get(entry.id);
+          const game = gameMap.get(entry.id);
+          const siteActive = site && now - new Date(site.last_seen_at).getTime() < 150000;
+          const gameActive = game && now - new Date(game.last_seen_at).getTime() < 150000;
+          const visible = site?.show_online !== false;
+          const lastSeen = [site?.last_seen_at, game?.last_seen_at].filter(Boolean).sort().reverse()[0] || null;
           return {
             id: entry.id, uid: uidMap.get(entry.id) ?? null,
             username: String(entry.user_metadata?.username || entry.email?.split("@")[0] || "User").slice(0, 80),
             email: entry.email || "", role, createdAt: entry.created_at,
-            online: Boolean(presenceMap.get(entry.id)) && now - new Date(presenceMap.get(entry.id)).getTime() < 180000,
-            lastSeenAt: presenceMap.get(entry.id) || null,
+            online: visible && Boolean(siteActive || gameActive),
+            inGame: visible && Boolean(gameActive),
+            server: visible && site?.show_server && gameActive ? game?.server_host || null : null,
+            lastSeenAt: lastSeen,
             device: isDeveloper && deviceMap.has(entry.id) ? {
               fingerprint: deviceMap.get(entry.id).fingerprint_digest.slice(0, 16),
               boundAt: deviceMap.get(entry.id).bound_at,
