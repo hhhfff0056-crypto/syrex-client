@@ -50,3 +50,7 @@ export const manageAdminSubscription = (userId, mode, days = 0) =>
   licenseRequest('admin-subscription', { userId, mode, days });
 
 export const pingSitePresence = () => licenseRequest('presence');
+export const listOnlineMembers = () => licenseRequest('online-users');
+export const setOnlineVisibility = (enabled) => licenseRequest('presence-visibility', { enabled });
+export const setServerVisibility = (enabled) => licenseRequest('server-visibility', { enabled });
+export const markSiteOffline = () => licenseRequest('presence-offline');
