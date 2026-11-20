@@ -12,9 +12,10 @@ const Features = () => {
             <div className="container features-grid">
                 <motion.div
                     className="feature-visual"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    initial={{ opacity: 0, y: 90, rotateY: -12, scale: 0.9 }}
+                    whileInView={{ opacity: 1, y: 0, rotateY: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
                 >
                     <div className="tesseract-wrapper">
                         <div className="feature-grid-bg"></div>
@@ -28,7 +29,7 @@ const Features = () => {
                     className="feature-text"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.05 }}
+                    transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
                 >
                     <span className="feature-badge">
                         <svg className="badge-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
