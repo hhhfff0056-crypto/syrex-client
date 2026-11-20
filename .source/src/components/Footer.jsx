@@ -31,6 +31,7 @@ const Footer = () => {
                                     Discord
                                 </a>
                             </li>
+                            <li><a href="https://t.me/+EkTnnFIbiIhhZWUx" target="_blank" rel="noopener noreferrer"><Send size={16} className="icon-grey" /> Telegram</a></li>
                             <li><a href="mailto:syrexdlc@gmail.com"><Send size={16} className="icon-grey" /> Email</a></li>
                         </ul>
                     </div>
