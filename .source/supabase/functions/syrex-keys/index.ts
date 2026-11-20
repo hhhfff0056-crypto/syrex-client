@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
       redeem: [8, 600], generate: [10, 600], history: [45, 60],
       "admin-users": [30, 60], "admin-subscription": [15, 60],
       "presence": [6, 60], "online-users": [10, 60],
-      "presence-visibility": [6, 60], "presence-offline": [6, 60]
+      "presence-visibility": [6, 60], "presence-offline": [6, 60], "server-visibility": [6, 60]
     };
     if (typeof action !== "string" || !limits[action]) {
       return respond({ error: "Неизвестная операция." }, 400);
@@ -171,15 +171,16 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       return respond({ ok: true });
     }
-    if (action === "presence-visibility") {
+    if (action === "presence-visibility" || action === "server-visibility") {
       if (typeof payload.enabled !== "boolean") {
-        return respond({ error: "Нужно указать enabled: true или false." }, 400);
+        return respond({ error: "Укажите enabled: true или false." }, 400);
       }
       const { data: row, error: currentError } = await admin.from("syrex_site_presence")
         .select("user_id").eq("user_id", user.id).maybeSingle();
       if (currentError) throw currentError;
+      const column = action === "server-visibility" ? "show_server" : "show_online";
       const fields = {
-        display_name: displayName, show_online: payload.enabled,
+        display_name: displayName, [column]: payload.enabled,
         last_seen_at: new Date().toISOString()
       };
       const { error } = row
@@ -189,25 +190,40 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, visible: payload.enabled });
     }
     if (action === "online-users") {
-      // Visibility expires automatically after 150 seconds without a heartbeat.
-      // Only logged-in members may fetch the list; never return emails or IDs.
+      // Activity is temporary, inferred from distinct authenticated heartbeats.
+      // Server host is visible only after explicit show_server opt-in.
+      // No user IDs, tokens, emails, IPs, or hardware identifiers are returned.
       const cutoff = new Date(Date.now() - 150000).toISOString();
-      const { data: rows, count, error } = await admin.from("syrex_site_presence")
-        .select("user_id,display_name", { count: "exact" })
-        .eq("show_online", true)
-        .gte("last_seen_at", cutoff)
-        .order("last_seen_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      const { data: mine, error: mineError } = await admin.from("syrex_site_presence")
-        .select("show_online,last_seen_at").eq("user_id", user.id).maybeSingle();
-      if (mineError) throw mineError;
+      const [sites, games, mineResult] = await Promise.all([
+        admin.from("syrex_site_presence")
+          .select("user_id,display_name,show_online,show_server,last_seen_at")
+          .eq("show_online", true).limit(500),
+        admin.from("syrex_game_presence").select("user_id,server_host,last_seen_at")
+          .gte("last_seen_at", cutoff).limit(500),
+        admin.from("syrex_site_presence").select("show_online,show_server")
+          .eq("user_id", user.id).maybeSingle()
+      ]);
+      if (sites.error || games.error || mineResult.error) {
+        throw sites.error || games.error || mineResult.error;
+      }
+      const currentGame = new Map((games.data || []).map((row) => [row.user_id, row]));
+      const members = (sites.data || []).flatMap((row) => {
+        const siteActive = new Date(row.last_seen_at).getTime() >= Date.now() - 150000;
+        const game = currentGame.get(row.user_id);
+        if (!siteActive && !game) return [];
+        return [{
+          nickname: row.display_name,
+          me: row.user_id === user.id,
+          onSite: siteActive,
+          playing: Boolean(game),
+          server: game && row.show_server ? game.server_host : null
+        }];
+      });
+      members.sort((a, b) => Number(b.playing) - Number(a.playing) || a.nickname.localeCompare(b.nickname));
       return respond({
-        count: count || 0,
-        members: (rows || []).map((row) => ({
-          nickname: row.display_name, me: row.user_id === user.id
-        })),
-        visible: mine?.show_online !== false
+        count: members.length, members,
+        visible: mineResult.data?.show_online !== false,
+        serverVisible: mineResult.data?.show_server === true
       });
     }
 
