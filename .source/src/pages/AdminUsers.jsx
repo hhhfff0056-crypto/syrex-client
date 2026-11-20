@@ -74,7 +74,7 @@ export default function AdminUsers() {
       </button>
       <div className="syrex-admin-heading">
         <div><h1><ShieldCheck size={27}/> Управление пользователями</h1>
-          <p>Зарегистрированные аккаунты Syrex и их подписки Premium</p></div>
+          <p>Зарегистрированные аккаунты Syrex, подписки и активность на сайте</p></div>
         <button type="button" className="syrex-admin-refresh" disabled={loading} onClick={() => load()}>
           <RefreshCw size={16}/> Обновить
         </button>
@@ -104,6 +104,10 @@ export default function AdminUsers() {
                   <span className={'syrex-admin-status ' + (u.premium ? 'premium' : '')}>
                     {u.premium ? 'PREMIUM' : 'FREE'}</span></div>
                 <div className="syrex-admin-user-meta">{u.email} · UID {u.uid ?? '—'} · {u.role}</div>
+                <div className="syrex-admin-user-meta" style={{ color: u.online ? '#75d69c' : undefined }}>
+                  {u.online ? '● На сайте сейчас' : '○ Не в сети'}
+                  {!u.online && u.lastSeenAt ? ' · Был на сайте: ' + new Date(u.lastSeenAt).toLocaleString('ru-RU') : ''}
+                </div>
                 <div className="syrex-admin-user-meta">Устройство: {u.device ? `HWID-хеш ${u.device.fingerprint}… · Последний вход ${new Date(u.device.lastSeenAt).toLocaleString("ru-RU")}` : "не привязано или нет доступа"}</div>
                 <div className="syrex-admin-user-meta">Регистрация: {formatDate(u.createdAt)}
                   {u.premium && ' · Подписка до: ' + formatDate(u.expiresAt)}
