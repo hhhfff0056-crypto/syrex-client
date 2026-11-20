@@ -21,6 +21,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import AdminUsers from './pages/AdminUsers';
 import OnlineUsers from './pages/OnlineUsers';
+import Friends from './pages/Friends';
 import { useLanguage } from './context/LanguageContext';
 import { api } from './api';
 import { getAuthItem, setAuthItemAuto } from './utils/authStorage';
@@ -80,7 +81,7 @@ function App() {
       document.removeEventListener('visibilitychange', ping);
     };
   }, []);
-  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/admin' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/online' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
+  const hideFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/profile' || location.pathname === '/admin' || location.pathname === '/keys' || location.pathname === '/cosmetics' || location.pathname === '/online' || location.pathname === '/friends' || location.pathname === '/profile/tikets' || location.pathname === '/buy' || location.pathname === '/admin';
   const { isFading } = useLanguage();
 
 
@@ -144,6 +145,7 @@ function App() {
         <Route path="/keys" element={<Keys />} />
         <Route path="/cosmetics" element={<Cosmetics />} />
         <Route path="/online" element={<OnlineUsers />} />
+        <Route path="/friends" element={<Friends />} />
         <Route path="/profile/tikets" element={<Tickets />} />
         <Route path="/buy" element={<Buy />} />
         <Route path="/products" element={<Products />} />
