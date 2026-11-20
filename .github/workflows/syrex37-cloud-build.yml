@@ -16,9 +16,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Download user-provided public Syrex 3.7 archive
         env:
-          SOURCE_URL: 'https://www.dropbox.com/scl/fi/gr006577j5usj1l1ugdhx/syrex-3.7.zip?rlkey=mxgtjaqkvidze9xyhtm3cvksj&dl=1'
+          SOURCE_URL: 'https://www.dropbox.com/scl/fi/gr006577j5usj1l1ugdhx/syrex-3.7.zip?rlkey=mxgtjaqkvidze9xyhtm3cvksj&raw=1'
         run: |
-          curl --fail --location --retry 2 --connect-timeout 20 --max-time 650 -o /tmp/syrex-3.7-original.zip "$SOURCE_URL"
+          curl --fail --location --retry 5 --retry-delay 3 --retry-all-errors --connect-timeout 20 --max-time 650 -o /tmp/syrex-3.7-original.zip "$SOURCE_URL"
           file /tmp/syrex-3.7-original.zip
           unzip -tq /tmp/syrex-3.7-original.zip >/tmp/zipcheck.txt
           python3 - <<'PY'
@@ -76,6 +76,11 @@ jobs:
           python3 scripts/strip-rentgen-motionblur.py "$BUILD_DIR"
           echo "Java sources after removal:"
           find "$BUILD_DIR/src/main/java" -type f -name '*.java' | wc -l
+      - name: Install original-style two-ring Wind Predict
+        run: |
+          cp build-assets/WindPredictModule.java "$BUILD_DIR/src/main/java/syrux/client/module/render/WindPredictModule.java"
+          grep -q 'UiTheme.field09686' "$BUILD_DIR/src/main/java/syrux/client/module/render/WindPredictModule.java"
+          echo "Applied theme-aware large and small landing circles"
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
