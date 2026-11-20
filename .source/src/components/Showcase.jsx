@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import previewOne from '../assets/images/d1.png';
 import previewTwo from '../assets/images/d2.png';
@@ -27,15 +28,15 @@ const Showcase = () => {
           <p>{t.showcase.subtitle}</p>
         </div>
         <div className="showcase-grid">
-          <div className="showcase-card dim-side">
+          <motion.div className="showcase-card dim-side" initial={{opacity:0,y:100,rotateY:-16,scale:.86}} whileInView={{opacity:1,y:0,rotateY:0,scale:1}} viewport={{once:true,amount:.2}} transition={{duration:.95,ease:[.22,1,.36,1]}}> 
             <img src={previewOne} alt="Client preview 1" className="showcase-image" />
-          </div>
-          <div className="showcase-card">
+          </motion.div>
+          <motion.div className="showcase-card" initial={{opacity:0,y:120,scale:.82}} whileInView={{opacity:1,y:0,scale:1}} viewport={{once:true,amount:.2}} transition={{duration:1.05,delay:.12,ease:[.22,1,.36,1]}}> 
             <img src={previewTwo} alt="Client preview 2" className="showcase-image" />
           </div>
           <div className="showcase-card dim-side">
             <img src={previewThree} alt="Client preview 3" className="showcase-image" />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
