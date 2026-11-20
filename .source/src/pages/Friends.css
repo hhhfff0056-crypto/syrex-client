@@ -1,0 +1,48 @@
+.syrex-friends-page{min-height:100vh;padding:112px 18px 80px;background:radial-gradient(ellipse at 45% -10%,#332700 0,transparent 50%),#080808;color:#f4f4f4}
+.syrex-friends-container{max-width:960px;margin:0 auto}
+.syrex-friends-back{display:flex;align-items:center;gap:8px;color:#a9a9a9;border:0;background:none;font:inherit;font-size:14px;cursor:pointer;padding:0;margin-bottom:28px}
+.syrex-friends-back:hover{color:#ffe14c}
+.syrex-friends-header{display:flex;gap:18px;align-items:center;margin-bottom:26px}
+.syrex-friends-logo{width:62px;height:62px;flex:0 0 62px;background:linear-gradient(135deg,#ffeb65,#e8aa00);color:#211800;display:grid;place-items:center;border-radius:17px;box-shadow:0 0 30px #ffd90025}
+.syrex-friends-heading{flex:1}
+.syrex-friends-heading h1{font-size:clamp(28px,4vw,39px);line-height:1.15;font-weight:800;letter-spacing:-.7px;margin:0 0 8px}
+.syrex-friends-heading p{color:#aaa;font-size:13px;line-height:1.5;margin:0}
+.syrex-friends-count{display:flex;flex-direction:column;align-items:center;min-width:77px;padding:11px;background:#1b180f;border:1px solid #53451b;border-radius:14px}
+.syrex-friends-count strong{font-size:25px;color:#ffdb3e}
+.syrex-friends-count span{color:#bab2a0;font-size:11px}
+.syrex-friends-search-panel{background:#151515;border:1px solid #353229;border-radius:17px;padding:22px;margin-bottom:29px}
+.syrex-friends-search-panel h2{margin:0 0 19px;font-size:17px;display:flex;align-items:center;gap:11px}
+.syrex-friends-search-panel h2 svg{color:#ffd73d}
+.syrex-friends-search-form{display:flex;gap:11px}
+.syrex-friends-search{flex:1;display:flex;align-items:center;gap:11px;border:1px solid #4a463b;background:#202020;border-radius:11px;padding:0 14px}
+.syrex-friends-search svg{color:#c1b990;flex:0 0 auto}
+.syrex-friends-search input{width:100%;border:0;background:none;outline:0;padding:14px 0;font:inherit;font-size:14px;color:#f4f4f4}
+.syrex-friends-search input::placeholder{color:#838383}
+.syrex-friends-search-form>button,.syrex-friend-accept{border:1px solid #ffd637;border-radius:11px;padding:12px 20px;color:#1b1605;background:linear-gradient(130deg,#ffe96b,#ffcc09);font:inherit;font-size:13px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.syrex-friends-search-form button:disabled,.syrex-friend-buttons button:disabled,.syrex-friends-result button:disabled{opacity:.5;cursor:default}
+.syrex-friends-result{display:flex;gap:13px;align-items:center;border:1px solid #3e3522;border-radius:12px;background:#1e1d17;margin-top:15px;padding:12px}
+.syrex-friends-tabs{display:flex;gap:12px;align-items:stretch;border-bottom:1px solid #363636;margin-bottom:17px}
+.syrex-friends-tabs button{position:relative;border:0;border-bottom:3px solid transparent;padding:13px 13px;background:none;color:#9b9b9b;cursor:pointer;font:inherit;font-size:14px;font-weight:650;display:flex;align-items:center;gap:8px}
+.syrex-friends-tabs button.active{color:#ffe04b;border-bottom-color:#ffd018}
+.syrex-friends-tabs button i{width:7px;height:7px;background:#ffc700;border-radius:50%}
+.syrex-friends-tabs .syrex-friends-refresh{margin-left:auto;color:#ccc}
+.syrex-friends-list{border:1px solid #333;background:#111;border-radius:17px;overflow:hidden;min-height:85px}
+.syrex-friend-person{display:flex;align-items:center;gap:14px;padding:16px 18px}
+.syrex-friend-person+.syrex-friend-person{border-top:1px solid #303030}
+.syrex-friend-avatar{width:47px;height:47px;flex:0 0 47px;display:grid;place-items:center;background:linear-gradient(145deg,#403515,#18140b);border:1px solid #6f571b;color:#ffdf54;border-radius:13px;font-weight:800;font-size:19px}
+.syrex-friend-text{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.syrex-friend-text strong{font-size:14px;overflow-wrap:anywhere}
+.syrex-friend-text small{font-size:12px;color:#9d9d9d}
+.syrex-friend-buttons{display:flex;gap:8px}
+.syrex-friend-buttons .syrex-friend-accept{padding:10px}
+.syrex-friend-remove{border:1px solid #48423b;border-radius:9px;padding:10px 13px;color:#d3c7c0;background:#25221f;font:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.syrex-friend-remove:hover:not(:disabled){border-color:#dc776a}
+.syrex-friends-empty{padding:33px 16px;margin:0;text-align:center;color:#999;font-size:13px;line-height:1.65}
+.syrex-friends-error,.syrex-friends-success{margin-top:15px;border-radius:10px;padding:12px 16px;font-size:13px}
+.syrex-friends-error{background:#3b2020;color:#ffd0d0}
+.syrex-friends-success{background:#272209;color:#ffea9b}
+.syrex-friends-tip{border:1px solid #57471a;background:linear-gradient(135deg,#24200f,#111);border-radius:15px;padding:18px 19px;margin-top:25px;display:flex;gap:16px;align-items:flex-start}
+.syrex-friends-tip>svg{color:#ffd424;flex-shrink:0}
+.syrex-friends-tip strong{font-size:14px;color:#f6e4ab}
+.syrex-friends-tip p{font-size:12px;line-height:1.75;color:#aaa;margin:8px 0 0}
+@media(max-width:650px){.syrex-friends-page{padding:95px 13px 60px}.syrex-friends-header{gap:12px;flex-wrap:wrap}.syrex-friends-logo{width:49px;height:49px;flex-basis:49px}.syrex-friends-count{margin-left:auto}.syrex-friends-search-panel{padding:16px}.syrex-friends-search-form{flex-direction:column}.syrex-friends-search-form>button{width:100%}.syrex-friend-person{padding:13px 10px;gap:9px}.syrex-friend-avatar{width:39px;height:39px;flex-basis:39px}.syrex-friend-buttons .syrex-friend-accept{font-size:11px;padding:8px}.syrex-friend-remove{font-size:11px;padding:8px}.syrex-friends-tabs button{font-size:12px;padding:12px 7px}}
