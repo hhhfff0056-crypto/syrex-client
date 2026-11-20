@@ -139,6 +139,7 @@ function BrowserCheck({ onVerified }) {
   }, [retryCount, onComplete]);
 
   const retry = () => setRetryCount((value) => value + 1);
+  const continueToSite = () => onComplete();
   const utc = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
   const host = window.location.hostname === 'localhost' ? 'Syrex Client' : window.location.hostname;
 
@@ -160,7 +161,7 @@ function BrowserCheck({ onVerified }) {
               : <span className="syrex-guard-spinner" aria-hidden="true" />}
         </div>
         <div className="syrex-guard-step">{phase === 'error' ? 'Проверка не завершена' : step}</div>
-        {phase === 'error' && <button type="button" className="syrex-guard-retry" onClick={retry}>Повторить проверку</button>}
+        {phase === 'error' && <div className="syrex-guard-actions"><button type="button" className="syrex-guard-retry" onClick={retry}>Повторить проверку</button><button type="button" className="syrex-guard-retry" onClick={continueToSite}>Открыть сайт</button></div>}
       </div>
       <div className="syrex-guard-metadata" aria-label="Данные проверки">
         <div><span>Request ID:</span> <strong>{requestId}</strong></div>
