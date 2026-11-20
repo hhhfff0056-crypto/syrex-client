@@ -27,3 +27,19 @@
 .syrex-admin-empty{text-align:center;padding:35px;color:var(--text-secondary)}
 .syrex-admin-pagination{display:flex;align-items:center;justify-content:center;gap:18px;margin:24px 0}
 @media(max-width:700px){.syrex-admin-heading,.syrex-admin-user{align-items:stretch;flex-direction:column}.syrex-admin-actions button{flex:1}.syrex-admin-controls{align-items:stretch;flex-direction:column}.syrex-admin-search{width:100%;box-sizing:border-box}.syrex-admin-duration{justify-content:space-between}}
+
+
+/* Theme-aware admin dashboard: black text on light surfaces, yellow accents. */
+[data-theme="light"] .syrex-admin-users{background:var(--bg-color);color:#111}
+[data-theme="light"] .syrex-admin-user{background:#fffdf6;border-color:#d9cfb6;color:#111}
+[data-theme="light"] .syrex-admin-search{background:#fffdf6;border-color:#cfc5ab;color:#111}
+[data-theme="light"] .syrex-admin-search input{color:#111}
+[data-theme="light"] .syrex-admin-search input::placeholder{color:#665f52}
+[data-theme="light"] .syrex-admin-back,[data-theme="light"] .syrex-admin-refresh,[data-theme="light"] .syrex-admin-pagination button{border-color:#cfc5ab;color:#111}
+[data-theme="light"] .syrex-admin-duration select{background:#fffdf6;color:#111;border-color:#cfc5ab}
+[data-theme="light"] .syrex-admin-status{background:#e9e3d4;color:#111}
+[data-theme="light"] .syrex-admin-status.premium{background:#ffe26a;color:#171100}
+[data-theme="light"] .syrex-admin-actions button{background:#ffe36a;color:#111;border-color:#c9a622}
+[data-theme="light"] .syrex-admin-actions button:hover{background:#ffcf28}
+[data-theme="light"] .syrex-admin-heading h1 svg{color:#c89b00}
+[data-theme="light"] .syrex-admin-message{color:#665000}
