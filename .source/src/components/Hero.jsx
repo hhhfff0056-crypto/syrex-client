@@ -14,6 +14,17 @@ const Hero = () => {
         <section className="hero">
             <div className="hero-bg-glow"></div>
             <div className="cube-grid"></div>
+            <div className="syrex-motion-stage" aria-hidden="true">
+              <div className="syrex-motion-halo syrex-motion-halo-one" />
+              <div className="syrex-motion-halo syrex-motion-halo-two" />
+              <div className="syrex-motion-object">
+                <div className="syrex-motion-plane syrex-motion-plane-front">S</div>
+                <div className="syrex-motion-plane syrex-motion-plane-back">S</div>
+                <div className="syrex-motion-plane syrex-motion-plane-edge" />
+              </div>
+              <div className="syrex-motion-spark syrex-motion-spark-one" />
+              <div className="syrex-motion-spark syrex-motion-spark-two" />
+            </div>
 
             <div className="container hero-content">
                 <motion.div
@@ -31,7 +42,7 @@ const Hero = () => {
                     className="hero-title"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8 }}
+                    transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
                 >
                     <span className="hero-title-line hero-title-line-1">{t.hero.titleLine1}</span>
                     <span className="hero-title-line hero-title-line-2 green-gradient-text">{t.hero.titleLine2}</span>
