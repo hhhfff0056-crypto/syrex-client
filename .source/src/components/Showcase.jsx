@@ -33,8 +33,8 @@ const Showcase = () => {
           </motion.div>
           <motion.div className="showcase-card" initial={{opacity:0,y:120,scale:.82}} whileInView={{opacity:1,y:0,scale:1}} viewport={{once:true,amount:.2}} transition={{duration:1.05,delay:.12,ease:[.22,1,.36,1]}}> 
             <img src={previewTwo} alt="Client preview 2" className="showcase-image" />
-          </div>
-          <div className="showcase-card dim-side">
+          </motion.div>
+          <motion.div className="showcase-card dim-side" initial={{opacity:0,y:100,rotateY:16,scale:.86}} whileInView={{opacity:1,y:0,rotateY:0,scale:1}} viewport={{once:true,amount:.2}} transition={{duration:.95,delay:.2,ease:[.22,1,.36,1]}}>
             <img src={previewThree} alt="Client preview 3" className="showcase-image" />
           </motion.div>
         </div>
