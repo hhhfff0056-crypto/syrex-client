@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Users, Search, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { listAdminUsers, manageAdminSubscription } from '../services/licenseApi';
@@ -17,22 +17,31 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const requestId = useRef(0);
 
   const load = async (p = page) => {
+    const id = ++requestId.current;
     setLoading(true);
     setError('');
     try {
       const result = await listAdminUsers(p);
+      if (id !== requestId.current) return;
       setUsers(result.users || []);
       setHasMore(Boolean(result.hasMore));
     } catch (err) {
+      if (id !== requestId.current) return;
+      setUsers([]);
+      setHasMore(false);
       setError(err.message || 'Не удалось загрузить пользователей.');
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   };
 
-  useEffect(() => { load(page); }, [page]);
+  useEffect(() => {
+    load(page);
+    return () => { requestId.current += 1; };
+  }, [page]);
 
   const visible = useMemo(() => users.filter((u) => {
     const q = search.trim().toLowerCase();
@@ -87,7 +96,7 @@ export default function AdminUsers() {
       {message && <p className="syrex-admin-message" role="status">{message}</p>}
       <div className="syrex-admin-list">
         {loading ? <p className="syrex-admin-empty">Загружаем пользователей…</p> :
-          visible.length ? visible.map((u) => {
+          error ? <p className="syrex-admin-empty">Не удалось получить список. Нажмите «Обновить».</p> : visible.length ? visible.map((u) => {
             const locked = ['ADMIN', 'DEV', 'DEVELOPER'].includes(u.role);
             return <div className="syrex-admin-user" key={u.id}>
               <div className="syrex-admin-user-info">
