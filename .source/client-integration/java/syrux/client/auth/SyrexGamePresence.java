@@ -1,5 +1,7 @@
 package syrux.client.auth;
 
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ServerInfo;
 import java.net.URI;
@@ -80,14 +82,16 @@ public final class SyrexGamePresence {
     private static void send(String token, String action, String host) {
         CompletableFuture.runAsync(() -> {
             try {
-                String body = "{\\"action\\":\\"" + action + "\\",\\"server\\":" +
-                    (host == null ? "null" : "\\"" + host + "\\"") + "}";
+                JsonObject payload = new JsonObject();
+                payload.addProperty("action", action);
+                if (host == null) payload.add("server", JsonNull.INSTANCE);
+                else payload.addProperty("server", host);
                 HttpRequest req = HttpRequest.newBuilder(URI.create(URL))
                     .timeout(Duration.ofSeconds(12))
                     .header("apikey", PUBLIC_KEY)
                     .header("Authorization", "Bearer " + token)
                     .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                    .POST(HttpRequest.BodyPublishers.ofString(payload.toString(), StandardCharsets.UTF_8))
                     .build();
                 HTTP.send(req, HttpResponse.BodyHandlers.discarding());
             } catch (Exception ignored) {
