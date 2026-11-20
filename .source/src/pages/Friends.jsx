@@ -31,6 +31,8 @@ function Person({ person, pending, sent, onAccept, onDecline, onRemove, busy }) 
 export default function Friends() {
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
+  const [party, setParty] = useState(null);
+  const [partyInvites, setPartyInvites] = useState([]);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +47,10 @@ export default function Friends() {
     try {
       const data = await socialRequest('list');
       setFriends(data.friends || []);
+      socialRequest('party-status').then(group => {
+        setParty(group.party || null);
+        setPartyInvites(group.invites || []);
+      }).catch(() => {});
       setError('');
     } catch (e) {
       if (!quiet) setError(e.message || 'Ошибка загрузки друзей.');
@@ -153,13 +159,31 @@ export default function Friends() {
       </section>
       {error && <p className="syrex-friends-error" role="alert">{error}</p>}
       {message && <p className="syrex-friends-success" role="status">{message}</p>}
+      <section className="syrex-party-panel">
+        <h2><Users size={19}/> Моя Party <span>{party ? party.members.length : 0}/6</span></h2>
+        {party ? <div className="syrex-party-members">
+          {(party.members || []).map(member => <span key={member.nickname} className="syrex-party-pill">
+            <span className="syrex-party-dot"/> {member.nickname}
+            {member.me && ' (вы)'} {member.leader && ' · Лидер'}
+          </span>)}
+        </div> : <p>Пати ещё не создано. В Minecraft введи <code>.party НикДруга</code>, чтобы отправить приглашение.</p>}
+        {partyInvites.map((invite, index) => <div className="syrex-party-invite" key={invite.from + index}>
+          <strong>{invite.from} приглашает в пати</strong>
+          <button type="button" disabled={busy} onClick={() => act('party-accept', {}, 'Вы вступили в пати.')}>Принять</button>
+          <button type="button" disabled={busy} onClick={() => act('party-decline', {}, 'Приглашение отклонено.')}>Отклонить</button>
+        </div>)}
+        <p>В игре: <code>.party НикДруга</code> — пригласить, <code>.party accept</code> — принять,
+          <code>.party list</code> — состав, <code>.party leave</code> — выйти.
+          Метки видны только друзьям из пати на одном сервере и в одном измерении.</p>
+      </section>
       <aside className="syrex-friends-tip">
         <img src={import.meta.env.BASE_URL + 'friends/waypoint.png'} width="52" height="52"
           alt="Жёлтая PNG-метка Syrex" className="syrex-friends-waypoint-preview"/>
-        <div><strong>Метки для друзей</strong>
-        <p>В Minecraft 1.21.11 с Syrex назначь клавишу «Метка друзьям», посмотри на блок и нажми её.
-          Метка появится у друзей на том же сервере и измерении примерно на 2 минуты.
-          Метки отправляются только при нажатии клавиши — местоположение не транслируется постоянно.</p></div>
+        <div><strong>Минималистичные метки Party</strong>
+        <p>В Minecraft 1.21.11 включи Visuals → Friend Pings и назначь клавишу «Метка в пати» (по умолчанию P).
+          Наведи прицел на блок и нажми её. У участников твоей пати появится маленький жёлтый пин,
+          а над ним — ник, координаты X/Y/Z и расстояние в метрах. Метка исчезнет через две минуты.
+          Игровые координаты передаются только после нажатия клавиши.</p></div>
       </aside>
     </div>
   </main>;
