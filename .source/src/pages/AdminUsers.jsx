@@ -45,7 +45,7 @@ export default function AdminUsers() {
 
   const visible = useMemo(() => users.filter((u) => {
     const q = search.trim().toLowerCase();
-    return !q || [u.username, u.email, String(u.uid ?? ''), u.id]
+    return !q || [u.username, u.email, String(u.uid ?? ''), u.id, u.device?.fingerprint]
       .some((v) => String(v || '').toLowerCase().includes(q));
   }), [users, search]);
 
@@ -82,7 +82,7 @@ export default function AdminUsers() {
       <div className="syrex-admin-controls">
         <label className="syrex-admin-search"><Search size={17}/>
           <input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по нику, почте или UID (на этой странице)"/>
+            placeholder="Поиск по нику, почте, UID или ID устройства"/>
         </label>
         <label className="syrex-admin-duration">Срок Premium
           <select value={duration} onChange={(e) => setDuration(e.target.value)}>
@@ -104,6 +104,7 @@ export default function AdminUsers() {
                   <span className={'syrex-admin-status ' + (u.premium ? 'premium' : '')}>
                     {u.premium ? 'PREMIUM' : 'FREE'}</span></div>
                 <div className="syrex-admin-user-meta">{u.email} · UID {u.uid ?? '—'} · {u.role}</div>
+                <div className="syrex-admin-user-meta">Устройство: {u.device ? `HWID-хеш ${u.device.fingerprint}… · Последний вход ${new Date(u.device.lastSeenAt).toLocaleString("ru-RU")}` : "не привязано или нет доступа"}</div>
                 <div className="syrex-admin-user-meta">Регистрация: {formatDate(u.createdAt)}
                   {u.premium && ' · Подписка до: ' + formatDate(u.expiresAt)}
                   {u.overrideMode === 'revoke' && ' · Подписка отключена администратором'}
