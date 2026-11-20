@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Globe, Moon, Sun, Sparkles, ShoppingBag, PlayCircle, Menu, X } from 'lucide-react';
+import { ChevronDown, Globe, Moon, Sun, Sparkles, ShoppingBag, PlayCircle, Menu, X, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -65,6 +65,7 @@ const Navbar = () => {
     { to: '/', label: t.nav.home, icon: <span className="icon-grid">⌘</span> },
     { to: '/#features', label: t.nav.features, icon: <Sparkles size={15} /> },
     { to: '/products', label: t.nav.programs, icon: <ShoppingBag size={15} /> },
+    { to: '/online', label: 'Онлайн', icon: <Users size={15} /> },
     {
       to: '/#inside-client',
       label: t.nav.support,
@@ -82,7 +83,7 @@ const Navbar = () => {
 
   const isActive = (to) => {
     if (to === '/') return location.pathname === '/' && (!location.hash || location.hash === '#top');
-    if (to === '/products') return location.pathname === '/products';
+    if (to === '/products' || to === '/online') return location.pathname === to;
     return location.pathname === '/' && location.hash === to.slice(1);
   };
 
