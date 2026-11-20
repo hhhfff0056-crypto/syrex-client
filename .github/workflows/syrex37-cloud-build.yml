@@ -18,7 +18,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Download user-provided public Syrex 3.7 archive
         env:
-          SOURCE_URL: 'https://uce936cfec3708bcdd2d065b86d4.dl.dropboxusercontent.com/cd/0/get/DMS0JvXrVCvtmxdZd6V-xTFEpC_PDmLJ-t8mwrsWh7Q7-ILfX7GMUAXsHFvtbirXtH9zQp67q0sXlklQdA5XBqNjDFUwEgNOOVen0DNOPsc2w3H01ekxftfqCMUtDl5kWYqWgjG76OK6xP3f0GPxlNUYDzoOvRvvjuDXIwwVFmDFyA/file?c_luid=54ddfba7'
+          SOURCE_URL: 'https://uc9245fbb1685b05a31c78096145.dl.dropboxusercontent.com/cd/0/get/DMSG_WW_PQK_qZc8fcIq12HitF70oyXNaRy6LUTkoJTorSa1PMkNM9pjrVjHRJs9IwGWK-IxHOl5lRVOY_3MeEOlcyoARZ2LFe_nE8v81CDanYJhWVrUomMtqYY8bKDqn0_pebKx8juVz3NbBK0rTZP0bpwjx5XENO-WvS7mg2s86w/file?c_luid=54ddfba7'
         run: |
           curl --fail --location --retry 2 --connect-timeout 20 --max-time 650 -o /tmp/syrex-3.7-original.zip "$SOURCE_URL"
           file /tmp/syrex-3.7-original.zip
@@ -54,6 +54,25 @@ jobs:
             exit 2
           fi
           echo "BUILD_DIR=$(dirname "$BUILD_FILE")" >> "$GITHUB_ENV"
+      - name: Overlay ported features, leave KillAura original
+        run: |
+          python3 - <<'PY'
+          import os,zipfile
+          src=os.environ["BUILD_DIR"]
+          count=0
+          with zipfile.ZipFile("build-assets/syrex37-features-overlay.zip") as z:
+            for name in z.namelist():
+              if not name.startswith("src/main/") or name.endswith("/"): continue
+              if "module/combat/" in name or "AttackAura" in name or "KillAura" in name:
+                raise RuntimeError("Combat module in overlay: "+name)
+              dest=os.path.abspath(os.path.join(src,name))
+              if not dest.startswith(os.path.abspath(src)+os.sep): raise RuntimeError("Bad path")
+              os.makedirs(os.path.dirname(dest),exist_ok=True)
+              with z.open(name) as inp,open(dest,"wb") as out:
+                out.write(inp.read())
+              count+=1
+          print("Applied ported features:",count)
+          PY
       - name: Remove broken Rentgen and MotionBlur modules
         run: |
           python3 scripts/strip-rentgen-motionblur.py "$BUILD_DIR"
