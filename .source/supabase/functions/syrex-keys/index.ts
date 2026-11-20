@@ -135,7 +135,7 @@ Deno.serve(async (req: Request) => {
     const limits: Record<string, [number, number]> = {
       status: [120, 60], download: [15, 60], "download-free": [30, 60],
       redeem: [8, 600], generate: [10, 600], history: [45, 60],
-      "admin-users": [30, 60], "admin-subscription": [15, 60]
+      "admin-users": [30, 60], "admin-subscription": [15, 60], "presence": [4, 60]
     };
     if (typeof action !== "string" || !limits[action]) {
       return respond({ error: "Неизвестная операция." }, 400);
@@ -147,6 +147,12 @@ Deno.serve(async (req: Request) => {
       return respond({ error: "Слишком много запросов. Повторите позже." }, 429);
     }
 
+    if (action === "presence") {
+      const { error } = await admin.from("syrex_site_presence")
+        .upsert({ user_id: user.id, last_seen_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (error) throw error;
+      return respond({ ok: true });
+    }
     if (action === "status" || action === "download" || action === "download-free") {
       const { data: license, error: dbError } = await admin.from("syrex_licenses")
         .select("expires_at,activated_at")
@@ -223,6 +229,10 @@ Deno.serve(async (req: Request) => {
         : { data: [], error: null };
       if (deviceError) throw deviceError;
       const deviceMap = new Map((deviceBindings || []).map((item) => [item.user_id, item]));
+      const { data: presence, error: presenceError } = await admin.from("syrex_site_presence")
+        .select("user_id,last_seen_at").in("user_id", ids);
+      if (presenceError) throw presenceError;
+      const presenceMap = new Map((presence || []).map((item) => [item.user_id, item.last_seen_at]));
       const now = Date.now();
       return respond({
         users: users.map((entry) => {
@@ -235,6 +245,8 @@ Deno.serve(async (req: Request) => {
             id: entry.id, uid: uidMap.get(entry.id) ?? null,
             username: String(entry.user_metadata?.username || entry.email?.split("@")[0] || "User").slice(0, 80),
             email: entry.email || "", role, createdAt: entry.created_at,
+            online: Boolean(presenceMap.get(entry.id)) && now - new Date(presenceMap.get(entry.id)).getTime() < 180000,
+            lastSeenAt: presenceMap.get(entry.id) || null,
             device: isDeveloper && deviceMap.has(entry.id) ? {
               fingerprint: deviceMap.get(entry.id).fingerprint_digest.slice(0, 16),
               boundAt: deviceMap.get(entry.id).bound_at,
