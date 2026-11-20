@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: syrex-site-build-main
+  cancel-in-progress: false
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -34,9 +37,19 @@ jobs:
           touch .nojekyll
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A index.html assets CNAME .nojekyll
+          git add -A index.html assets CNAME .nojekyll friends
           git add -A -- '*.svg' '*.png' '*.webp' '*.ico' 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m 'Deploy Syrex website build'
-            git push
+            for attempt in 1 2 3 4; do
+              git fetch origin main
+              if [ "$(git rev-parse HEAD:.source)" != "$(git rev-parse origin/main:.source)" ]; then
+                echo "Newer source exists. Newer build will publish it."
+                exit 0
+              fi
+              git rebase -X theirs origin/main
+              if git push origin HEAD:main; then exit 0; fi
+              sleep 2
+            done
+            exit 1
           fi
