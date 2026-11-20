@@ -104,7 +104,7 @@ const checkRegistration = async (username, email) => {
   const name = username.trim();
   const address = email.trim().toLowerCase();
   if (!/^[A-Za-z0-9_]{3,32}$/.test(name)) throw new Error('Ник: 3–32 символа, латиница, цифры и _.');
-  if (address.length > 254 || !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(address)) throw new Error('Введите правильный email.');
+  if (address.length > 254 || !/^[^ @]+@[a-z0-9-]+(?:[.][a-z0-9-]+)+$/i.test(address)) throw new Error('Введите правильный email.');
   if (['gmai.com', 'gmial.com', 'gmail.con', 'gmail.co', 'yaho.com', 'outlok.com'].includes(address.split('@')[1])) {
     throw new Error('В адресе почты возможна опечатка. Проверьте домен.');
   }
