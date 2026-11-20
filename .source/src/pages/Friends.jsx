@@ -154,7 +154,9 @@ export default function Friends() {
       {error && <p className="syrex-friends-error" role="alert">{error}</p>}
       {message && <p className="syrex-friends-success" role="status">{message}</p>}
       <aside className="syrex-friends-tip">
-        <Waypoints size={24}/><div><strong>Метки для друзей</strong>
+        <img src={import.meta.env.BASE_URL + 'friends/waypoint.png'} width="52" height="52"
+          alt="Жёлтая PNG-метка Syrex" className="syrex-friends-waypoint-preview"/>
+        <div><strong>Метки для друзей</strong>
         <p>В Minecraft 1.21.11 с Syrex назначь клавишу «Метка друзьям», посмотри на блок и нажми её.
           Метка появится у друзей на том же сервере и измерении примерно на 2 минуты.
           Метки отправляются только при нажатии клавиши — местоположение не транслируется постоянно.</p></div>
