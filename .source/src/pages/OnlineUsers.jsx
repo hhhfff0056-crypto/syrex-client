@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Gamepad2, Globe2, RefreshCw, Server, Users } from 'lucide-react';
 import { licenseRequest, pingSitePresence } from '../services/licenseApi';
@@ -35,9 +35,14 @@ export default function OnlineUsers() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [verified, setVerified] = useState(false);
+  const lastLoad = useRef(0);
+  const inFlight = useRef(false);
+  const retryAfter = useRef(0);
 
   const reload = useCallback(async () => {
-    if (document.visibilityState === 'hidden') return;
+    if (document.visibilityState === 'hidden' || inFlight.current || Date.now() < retryAfter.current || Date.now() - lastLoad.current < 12000) return;
+    inFlight.current = true;
+    lastLoad.current = Date.now();
     try {
       const result = await licenseRequest('online-users');
       setMembers(Array.isArray(result.members) ? result.members : []);
@@ -46,8 +51,9 @@ export default function OnlineUsers() {
       setServerVisible(result.serverVisible === true);
       setError('');
     } catch (err) {
-      setError(err.message || 'Не удалось загрузить онлайн.');
-    } finally { setLoading(false); }
+      if (err.status === 429) retryAfter.current = Date.now() + 65000;
+      setError(err.status === 429 ? 'Сервер ограничил частые запросы. Список обновится автоматически через минуту.' : (err.message || 'Не удалось загрузить онлайн.'));
+    } finally { inFlight.current = false; setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -57,7 +63,7 @@ export default function OnlineUsers() {
       if (!user) navigate('/login', { replace: true });
       else {
         setVerified(true);
-        pingSitePresence().catch(() => {}).finally(reload);
+        reload();
       }
     }).catch(() => {
       if (!cancelled) navigate('/login', { replace: true });
