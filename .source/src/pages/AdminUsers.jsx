@@ -105,8 +105,10 @@ export default function AdminUsers() {
                     {u.premium ? 'PREMIUM' : 'FREE'}</span></div>
                 <div className="syrex-admin-user-meta">{u.email} · UID {u.uid ?? '—'} · {u.role}</div>
                 <div className="syrex-admin-user-meta" style={{ color: u.online ? '#75d69c' : undefined }}>
-                  {u.online ? '● На сайте сейчас' : '○ Не в сети'}
-                  {!u.online && u.lastSeenAt ? ' · Был на сайте: ' + new Date(u.lastSeenAt).toLocaleString('ru-RU') : ''}
+                  {u.online ? u.inGame
+                    ? '● В Minecraft с Syrex' + (u.server ? ' · Сервер: ' + u.server : '')
+                    : '● На сайте сейчас' : '○ Не в сети'}
+                  {!u.online && u.lastSeenAt ? ' · Последняя активность: ' + new Date(u.lastSeenAt).toLocaleString('ru-RU') : ''}
                 </div>
                 <div className="syrex-admin-user-meta">Устройство: {u.device ? `HWID-хеш ${u.device.fingerprint}… · Последний вход ${new Date(u.device.lastSeenAt).toLocaleString("ru-RU")}` : "не привязано или нет доступа"}</div>
                 <div className="syrex-admin-user-meta">Регистрация: {formatDate(u.createdAt)}
