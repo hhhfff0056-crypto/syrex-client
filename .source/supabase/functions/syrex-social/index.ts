@@ -60,7 +60,10 @@ Deno.serve(async req => {
   const quotas: Record<string, [number, number]> = {
     list: [30, 60], search: [30, 60], request: [5, 60],
     respond: [20, 60], remove: [15, 60],
-    "ping-send": [12, 60], "ping-poll": [20, 60]
+    "ping-send": [12, 60], "ping-poll": [20, 60],
+    "party-status": [20, 60], "party-invite": [5, 60],
+    "party-accept": [8, 60], "party-decline": [8, 60],
+    "party-leave": [8, 60], "party-kick": [8, 60]
   };
   if (typeof action !== "string" || !quotas[action]) return respond({ error: "Неизвестная операция." }, 400);
   const token = (req.headers.get("authorization") || "").match(/^Bearer\s+(.+)$/i)?.[1];
@@ -217,6 +220,163 @@ Deno.serve(async req => {
       return respond({ ok: true });
     }
 
+    // One party per account; only the leader can invite or kick.
+    const myParty = async () => {
+      const { data: member, error: memberErr } = await admin.from("syrex_party_members")
+        .select("party_id").eq("user_id",user.id).maybeSingle();
+      if (memberErr) throw memberErr;
+      if (!member) return null;
+      const { data: party, error: partyErr } = await admin.from("syrex_parties")
+        .select("id,owner_user").eq("id",member.party_id).maybeSingle();
+      if (partyErr) throw partyErr;
+      return party;
+    };
+    const partyMembers = async (partyId: string) => {
+      const { data, error } = await admin.from("syrex_party_members")
+        .select("user_id").eq("party_id",partyId).limit(8);
+      if (error) throw error;
+      return (data || []).map(x => x.user_id as string);
+    };
+    const checkFriends = async (other: string) => {
+      const pair = sortedPair(user.id,other);
+      const { data, error } = await admin.from("syrex_friendships")
+        .select("status").eq("low_user",pair.low_user)
+        .eq("high_user",pair.high_user).maybeSingle();
+      if (error) throw error;
+      return data?.status === "accepted";
+    };
+    const myPartyPeers = async () => {
+      const party = await myParty();
+      if (!party) return [];
+      return (await partyMembers(party.id)).filter(id => id !== user.id);
+    };
+
+    if (action === "party-status") {
+      const party = await myParty();
+      const ids = party ? await partyMembers(party.id) : [];
+      const { data: pending, error: inviteErr } = await admin.from("syrex_party_invites")
+        .select("id,party_id,invited_by,expires_at").eq("invited_user",user.id)
+        .gt("expires_at",new Date().toISOString())
+        .order("created_at",{ascending:false}).limit(5);
+      if (inviteErr) throw inviteErr;
+      const names = await related([...new Set([...ids,...(pending || []).map(x=>x.invited_by)])]);
+      return respond({
+        party: party ? {
+          owner: names.get(party.owner_user)?.nickname || "Syrex",
+          members: ids.map(id=>({
+            nickname: names.get(id)?.nickname || "Игрок",
+            me:id===user.id, leader:id===party.owner_user
+          }))
+        } : null,
+        invites: (pending || []).map(x=>({
+          from: names.get(x.invited_by)?.nickname || "Игрок",
+          expiresAt:x.expires_at
+        }))
+      });
+    }
+
+    if (action === "party-invite") {
+      const name = String(payload.nickname || "").trim();
+      if (!/^[a-z0-9_]{3,32}$/i.test(name)) return respond({error:"Введите ник Syrex (3–32 символа)."},400);
+      const {data: profile,error:profileErr} = await admin.from("syrex_social_profiles")
+        .select("user_id,nickname").ilike("nickname",name).limit(2).maybeSingle();
+      if(profileErr) throw profileErr;
+      if(!profile || profile.user_id===user.id) return respond({error:"Друг не найден на сайте."},404);
+      if(!(await checkFriends(profile.user_id))) return respond({error:"Добавьте игрока в друзья через сайт Syrex."},403);
+      const {data:alreadyInParty,error:alreadyErr} = await admin.from("syrex_party_members")
+        .select("user_id").eq("user_id",profile.user_id).maybeSingle();
+      if(alreadyErr) throw alreadyErr;
+      if(alreadyInParty) return respond({error:"Игрок уже состоит в пати."},409);
+      let party = await myParty();
+      if(party && party.owner_user!==user.id) return respond({error:"Приглашать может только лидер пати."},403);
+      if(!party) {
+        const {data:created,error:createErr} = await admin.from("syrex_parties")
+          .insert({owner_user:user.id}).select("id,owner_user").single();
+        if(createErr?.code==="23505") return respond({error:"Пати уже создаётся. Повторите команду."},409);
+        if(createErr) throw createErr;
+        const {error:joinErr} = await admin.from("syrex_party_members")
+          .insert({party_id:created.id,user_id:user.id});
+        if(joinErr) {
+          await admin.from("syrex_parties").delete().eq("id",created.id).eq("owner_user",user.id);
+          throw joinErr;
+        }
+        party=created;
+      }
+      const currentMembers = await partyMembers(party.id);
+      if(currentMembers.length>=6) return respond({error:"В пати максимум 6 игроков."},409);
+      const {data:invited,error:invErr} = await admin.from("syrex_party_invites")
+        .select("id,expires_at").eq("party_id",party.id)
+        .eq("invited_user",profile.user_id).maybeSingle();
+      if(invErr) throw invErr;
+      if(invited && new Date(invited.expires_at).getTime()>Date.now())
+        return respond({error:"Приглашение уже отправлено. Оно действует 10 минут."},409);
+      const fields = {party_id:party.id,invited_user:profile.user_id,invited_by:user.id,
+        created_at:new Date().toISOString(),expires_at:new Date(Date.now()+600000).toISOString()};
+      const {error:writeErr} = invited
+        ? await admin.from("syrex_party_invites").update(fields).eq("id",invited.id)
+        : await admin.from("syrex_party_invites").insert(fields);
+      if(writeErr) throw writeErr;
+      return respond({ok:true,invited:profile.nickname});
+    }
+
+    if(action==="party-accept" || action==="party-decline") {
+      const {data:inv,error:invErr} = await admin.from("syrex_party_invites")
+        .select("id,party_id,invited_by").eq("invited_user",user.id)
+        .gt("expires_at",new Date().toISOString())
+        .order("created_at",{ascending:false}).limit(1).maybeSingle();
+      if(invErr) throw invErr;
+      if(!inv) return respond({error:"Нет активных приглашений в пати."},404);
+      if(action==="party-decline") {
+        const {error} = await admin.from("syrex_party_invites").delete().eq("id",inv.id);
+        if(error) throw error;
+        return respond({ok:true,declined:true});
+      }
+      if(await myParty()) return respond({error:"Сначала выйдите из текущей пати: .party leave"},409);
+      if(!(await checkFriends(inv.invited_by)))
+        return respond({error:"Лидер больше не находится у вас в друзьях."},403);
+      const members=await partyMembers(inv.party_id);
+      if(members.length>=6) return respond({error:"Пати заполнена."},409);
+      if(!members.includes(inv.invited_by)) return respond({error:"Пати уже не существует."},409);
+      const {error:joinErr}=await admin.from("syrex_party_members")
+        .insert({party_id:inv.party_id,user_id:user.id});
+      if(joinErr?.code==="23505") return respond({error:"Вы уже состоите в пати."},409);
+      if(joinErr) throw joinErr;
+      await admin.from("syrex_party_invites").delete().eq("invited_user",user.id);
+      return respond({ok:true,accepted:true});
+    }
+
+    if(action==="party-leave") {
+      const party=await myParty();
+      if(!party) return respond({error:"Вы не состоите в пати."},404);
+      if(party.owner_user===user.id) {
+        const {error} = await admin.from("syrex_parties").delete()
+          .eq("id",party.id).eq("owner_user",user.id);
+        if(error) throw error;
+        return respond({ok:true,disbanded:true});
+      }
+      const {error} = await admin.from("syrex_party_members").delete()
+        .eq("party_id",party.id).eq("user_id",user.id);
+      if(error) throw error;
+      return respond({ok:true,left:true});
+    }
+    if(action==="party-kick") {
+      const party=await myParty();
+      if(!party || party.owner_user!==user.id)
+        return respond({error:"Удалять игроков может только лидер пати."},403);
+      const name=String(payload.nickname||"").trim();
+      if(!/^[a-z0-9_]{3,32}$/i.test(name)) return respond({error:"Укажите ник игрока."},400);
+      const {data:profile,error:findErr}=await admin.from("syrex_social_profiles")
+        .select("user_id").ilike("nickname",name).maybeSingle();
+      if(findErr) throw findErr;
+      if(!profile || profile.user_id===user.id) return respond({error:"Игрок не найден."},404);
+      const {data:deleted,error:removeErr}=await admin.from("syrex_party_members")
+        .delete().eq("party_id",party.id).eq("user_id",profile.user_id)
+        .select("user_id");
+      if(removeErr) throw removeErr;
+      if(!deleted?.length) return respond({error:"Игрок не состоит в вашей пати."},404);
+      return respond({ok:true,kicked:name});
+    }
+
     const checkMyGame = async (server: string) => {
       const { data, error } = await admin.from("syrex_game_presence")
         .select("user_id").eq("user_id", user.id).eq("server_host", server)
@@ -240,10 +400,11 @@ Deno.serve(async req => {
       if (recentError) throw recentError;
       if (recent?.length) return respond({ error: "Метки можно отправлять раз в 5 секунд." }, 429);
       const rows = (await friendships()).filter(row => row.status === "accepted");
-      const friends = rows.map(row => row.low_user === user.id ? row.high_user : row.low_user);
-      if (!friends.length) return respond({ sent: 0 });
+      const friends = new Set(rows.map(row => row.low_user === user.id ? row.high_user : row.low_user));
+      const partyPeers = (await myPartyPeers()).filter(id => friends.has(id));
+      if (!partyPeers.length) return respond({ sent: 0, reason: "no-party" });
       const { data: online, error } = await admin.from("syrex_game_presence")
-        .select("user_id").in("user_id",friends)
+        .select("user_id").in("user_id",partyPeers)
         .eq("server_host",host).gte("last_seen_at",new Date(Date.now()-150000).toISOString());
       if (error) throw error;
       const receivers = (online || []).slice(0,40);
@@ -275,7 +436,8 @@ Deno.serve(async req => {
       if (!rows?.length) return respond({ pings: [] });
       const accepted = (await friendships()).filter(row => row.status === "accepted");
       const friends = new Set(accepted.map(row => row.low_user === user.id ? row.high_user : row.low_user));
-      const allowed = rows.filter(row => friends.has(row.sender));
+      const peers = new Set(await myPartyPeers());
+      const allowed = rows.filter(row => friends.has(row.sender) && peers.has(row.sender));
       const names = await related([...new Set(allowed.map(row=>row.sender))]);
       return respond({ pings: allowed.map(row => ({
         id: row.id, nickname: names.get(row.sender)?.nickname || "Друг",
