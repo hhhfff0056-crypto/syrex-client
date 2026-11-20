@@ -100,8 +100,32 @@ export const signIn = async (email, password, remember = true, captchaToken = ''
   return persistSession(result, remember);
 };
 
+const checkRegistration = async (username, email) => {
+  const name = username.trim();
+  const address = email.trim().toLowerCase();
+  if (!/^[A-Za-z0-9_]{3,32}$/.test(name)) throw new Error('Ник: 3–32 символа, латиница, цифры и _.');
+  if (address.length > 254 || !/^[^\\s@]+@[^\\s@.]+(?:\\.[^\\s@.]+)+$/.test(address)) throw new Error('Введите правильный email.');
+  if (['gmai.com', 'gmial.com', 'gmail.con', 'gmail.co', 'yaho.com', 'outlok.com'].includes(address.split('@')[1])) {
+    throw new Error('В адресе почты возможна опечатка. Проверьте домен.');
+  }
+  let response;
+  try {
+    response = await fetch(baseUrl + '/functions/v1/syrex-registration-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key },
+      body: JSON.stringify({ username: name, email: address }),
+      cache: 'no-store'
+    });
+  } catch {
+    throw new Error('Не удалось проверить никнейм. Попробуйте позже.');
+  }
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) throw new Error(result.error || 'Проверка регистрации недоступна.');
+};
+
 export const register = async (username, email, password, captchaToken = '') => {
   await verifyCaptcha(captchaToken);
+  await checkRegistration(username, email);
   const result = await request('signup?redirect_to=' + encodeURIComponent(redirectUrl()), {
     method: 'POST',
     payload: {
