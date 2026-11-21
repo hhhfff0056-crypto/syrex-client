@@ -100,6 +100,9 @@ export default function OnlineUsers() {
     setError('');
     try {
       await licenseRequest(field === 'server' ? 'server-visibility' : 'presence-visibility', { enabled });
+      // Reflect the confirmed setting immediately, even when the online list is on cooldown.
+      if (field === 'server') setServerVisible(enabled);
+      else setVisible(enabled);
       await reload();
     } catch (err) { setError(err.message || 'Не удалось изменить настройку.'); }
     finally { setBusy(''); }
