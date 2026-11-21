@@ -14,17 +14,7 @@ const Hero = () => {
         <section className="hero">
             <div className="hero-bg-glow"></div>
             <div className="cube-grid"></div>
-            <div className="syrex-motion-stage" aria-hidden="true">
-              <div className="syrex-motion-halo syrex-motion-halo-one" />
-              <div className="syrex-motion-halo syrex-motion-halo-two" />
-              <div className="syrex-motion-object">
-                <div className="syrex-motion-plane syrex-motion-plane-front">S</div>
-                <div className="syrex-motion-plane syrex-motion-plane-back">S</div>
-                <div className="syrex-motion-plane syrex-motion-plane-edge" />
-              </div>
-              <div className="syrex-motion-spark syrex-motion-spark-one" />
-              <div className="syrex-motion-spark syrex-motion-spark-two" />
-            </div>
+
 
             <div className="container hero-content">
                 <motion.div
