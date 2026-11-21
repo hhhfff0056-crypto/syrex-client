@@ -83,6 +83,8 @@ jobs:
           cp build-assets/WindPredictModule.java "$BUILD_DIR/src/main/java/syrux/client/module/render/WindPredictModule.java"
           grep -q 'UiTheme.field09686' "$BUILD_DIR/src/main/java/syrux/client/module/render/WindPredictModule.java"
           echo "Applied theme-aware large and small landing circles"
+      - name: Discord RPC animated GIF
+        run: python3 scripts/set_discord_gif.py "$BUILD_DIR"
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
