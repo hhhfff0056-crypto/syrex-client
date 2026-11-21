@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Check, Clock3, RefreshCw, Search, Send, Trash2,
@@ -8,9 +9,14 @@ import { socialRequest } from '../services/socialApi';
 import { getCurrentUser } from '../auth/supabaseAuth';
 import './Friends.css';
 
-function Person({ person, pending, sent, onAccept, onDecline, onRemove, busy }) {
+function Person({ person, pending, onAccept, onDecline, onRemove, busy, reduceMotion, index }) {
   const pendingIncoming = pending && person.direction === 'incoming';
-  return <article className="syrex-friend-person">
+  return <motion.article className="syrex-friend-person"
+    initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={reduceMotion ? { opacity: 1 } : { opacity: 0, x: -12 }}
+    transition={{ duration: reduceMotion ? 0 : .32, delay: reduceMotion ? 0 : Math.min(index * .045, .22) }}
+    whileHover={reduceMotion ? undefined : { y: -2 }}>
     <div className="syrex-friend-avatar">{person.nickname?.charAt(0)?.toUpperCase() || 'S'}</div>
     <div className="syrex-friend-text">
       <strong>{person.nickname}</strong>
@@ -25,11 +31,17 @@ function Person({ person, pending, sent, onAccept, onDecline, onRemove, busy }) 
         <Trash2 size={16}/> {pending ? 'Отменить' : 'Удалить'}
       </button>}
     </div>
-  </article>;
+  </motion.article>;
 }
 
 export default function Friends() {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
+  const reveal = (delay = 0) => ({
+    initial: reduceMotion ? false : { opacity: 0, y: 17 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: reduceMotion ? 0 : .52, delay: reduceMotion ? 0 : delay, ease: [.22, 1, .36, 1] }
+  });
   const [friends, setFriends] = useState([]);
   const [party, setParty] = useState(null);
   const [partyInvites, setPartyInvites] = useState([]);
@@ -103,16 +115,16 @@ export default function Friends() {
       <button className="syrex-friends-back" type="button" onClick={() => navigate('/profile')}>
         <ArrowLeft size={17}/> Личный кабинет
       </button>
-      <header className="syrex-friends-header">
+      <motion.header {...reveal(.04)} className="syrex-friends-header">
         <div className="syrex-friends-logo"><Users size={27}/></div>
         <div className="syrex-friends-heading">
           <h1>Друзья Syrex</h1>
           <p>Добавляй друзей на сайте и отправляй им игровые метки по клавише</p>
         </div>
         <div className="syrex-friends-count"><strong>{accepted.length}</strong><span>друзей</span></div>
-      </header>
+      </motion.header>
 
-      <div className="syrex-friends-search-panel">
+      <motion.div {...reveal(.12)} className="syrex-friends-search-panel">
         <h2><UserPlus size={20}/> Добавить друга</h2>
         <form onSubmit={search} className="syrex-friends-search-form">
           <label className="syrex-friends-search">
@@ -125,7 +137,12 @@ export default function Friends() {
             <Search size={16}/>{searching ? 'Поиск…' : 'Найти'}
           </button>
         </form>
-        {results.map(person => <div className="syrex-friends-result" key={person.uid ?? person.nickname}>
+        <AnimatePresence initial={false}>
+          {results.map((person, index) => <motion.div className="syrex-friends-result" key={person.uid ?? person.nickname}
+            initial={reduceMotion ? false : { opacity: 0, y: 9, scale: .985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+            transition={{ duration: reduceMotion ? 0 : .28, delay: reduceMotion ? 0 : Math.min(index * .05, .2) }}>
           <div className="syrex-friend-avatar">{person.nickname.charAt(0).toUpperCase()}</div>
           <div className="syrex-friend-text">
             <strong>{person.nickname}</strong><small>UID {person.uid ?? '—'}</small>
@@ -135,31 +152,45 @@ export default function Friends() {
             className="syrex-friend-accept">
             {person.status ? <><Clock3 size={15}/> Уже добавлен</> : <><UserPlus size={15}/> Добавить</>}
           </button>
-        </div>)}
-      </div>
+          </motion.div>)}
+        </AnimatePresence>
+      </motion.div>
 
-      <div className="syrex-friends-tabs" role="tablist" aria-label="Список друзей">
+      <motion.div {...reveal(.17)} className="syrex-friends-tabs" role="tablist" aria-label="Список друзей">
         <button role="tab" aria-selected={tab === 'friends'} className={tab === 'friends' ? 'active' : ''}
-          onClick={() => setTab('friends')}><UserCheck size={17}/> Друзья ({accepted.length})</button>
+          onClick={() => setTab('friends')}><UserCheck size={17}/> Друзья ({accepted.length})
+          {tab === 'friends' && <motion.span className="syrex-friends-tab-indicator" layoutId="syrex-friends-tab-indicator"
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 35 }}/>}</button>
         <button role="tab" aria-selected={tab === 'pending'} className={tab === 'pending' ? 'active' : ''}
-          onClick={() => setTab('pending')}><Clock3 size={17}/> Заявки ({pending.length}) {incoming.length > 0 && <i/>}</button>
+          onClick={() => setTab('pending')}><Clock3 size={17}/> Заявки ({pending.length}) {incoming.length > 0 && <i/>}
+          {tab === 'pending' && <motion.span className="syrex-friends-tab-indicator" layoutId="syrex-friends-tab-indicator"
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 35 }}/>}</button>
         <button className="syrex-friends-refresh" type="button" onClick={() => load()} disabled={loading}><RefreshCw size={16}/></button>
-      </div>
-      <section className="syrex-friends-list">
-        {loading ? <p className="syrex-friends-empty">Загружаем список друзей…</p> :
-          (tab === 'friends' ? accepted : pending).length
-            ? (tab === 'friends' ? accepted : pending).map(person =>
-              <Person key={person.uid || person.nickname} person={person} pending={tab === 'pending'}
-                onAccept={() => act('respond', { uid: person.uid, decision: 'accept' }, 'Игрок добавлен в друзья.')}
-                onDecline={() => act('respond', { uid: person.uid, decision: 'reject' }, 'Заявка отклонена.')}
-                onRemove={() => act('remove', { uid: person.uid }, 'Изменения сохранены.')} busy={busy}/>)
-            : <p className="syrex-friends-empty">{tab === 'friends'
-              ? 'Пока друзей нет. Найди игрока по нику или UID и отправь заявку.'
-              : 'Новых заявок пока нет.'}</p>}
-      </section>
+      </motion.div>
+      <motion.section {...reveal(.22)} className="syrex-friends-list">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab + (loading ? '-loading' : '-ready')} className="syrex-friends-list-content"
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -7 }}
+            transition={{ duration: reduceMotion ? 0 : .24 }}>
+            {loading ? <p className="syrex-friends-empty">Загружаем список друзей…</p> :
+              (tab === 'friends' ? accepted : pending).length
+                ? (tab === 'friends' ? accepted : pending).map((person, index) =>
+                  <Person key={person.uid || person.nickname} person={person} pending={tab === 'pending'}
+                    index={index} reduceMotion={reduceMotion}
+                    onAccept={() => act('respond', { uid: person.uid, decision: 'accept' }, 'Игрок добавлен в друзья.')}
+                    onDecline={() => act('respond', { uid: person.uid, decision: 'reject' }, 'Заявка отклонена.')}
+                    onRemove={() => act('remove', { uid: person.uid }, 'Изменения сохранены.')} busy={busy}/>)
+                : <p className="syrex-friends-empty">{tab === 'friends'
+                  ? 'Пока друзей нет. Найди игрока по нику или UID и отправь заявку.'
+                  : 'Новых заявок пока нет.'}</p>}
+          </motion.div>
+        </AnimatePresence>
+      </motion.section>
       {error && <p className="syrex-friends-error" role="alert">{error}</p>}
       {message && <p className="syrex-friends-success" role="status">{message}</p>}
-      <section className="syrex-party-panel">
+      <motion.section {...reveal(.29)} className="syrex-party-panel">
         <h2><Users size={19}/> Моя Party <span>{party ? party.members.length : 0}/6</span></h2>
         {party ? <div className="syrex-party-members">
           {(party.members || []).map(member => <span key={member.nickname} className="syrex-party-pill">
@@ -175,8 +206,8 @@ export default function Friends() {
         <p>В игре: <code>.party НикДруга</code> — пригласить, <code>.party accept</code> — принять,
           <code>.party list</code> — состав, <code>.party leave</code> — выйти.
           Метки видны только друзьям из пати на одном сервере и в одном измерении.</p>
-      </section>
-      <aside className="syrex-friends-tip">
+      </motion.section>
+      <motion.aside {...reveal(.35)} className="syrex-friends-tip">
         <img src={import.meta.env.BASE_URL + 'friends/waypoint.png'} width="52" height="52"
           alt="Жёлтая PNG-метка Syrex" className="syrex-friends-waypoint-preview"/>
         <div><strong>Минималистичные метки Party</strong>
@@ -184,7 +215,7 @@ export default function Friends() {
           Наведи прицел на блок и нажми её. У участников твоей пати появится маленький жёлтый пин,
           а над ним — ник, координаты X/Y/Z и расстояние в метрах. Метка исчезнет через две минуты.
           Игровые координаты передаются только после нажатия клавиши.</p></div>
-      </aside>
+      </motion.aside>
     </div>
   </main>;
 }
