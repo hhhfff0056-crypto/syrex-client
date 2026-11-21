@@ -157,7 +157,7 @@ export default function OnlineUsers() {
         </motion.button>
       </motion.div>
       <motion.div {...reveal(.26)} className="syrex-online-list">
-        <AnimatePresence initial={false} mode="popLayout">
+        <AnimatePresence initial={false} mode="sync">
           {loading ? <motion.div key="loading" className="syrex-online-empty"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }} exit={{ opacity: 0 }}
