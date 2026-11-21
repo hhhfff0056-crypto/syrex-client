@@ -44,3 +44,54 @@
 .syrex-online-error{color:#ffa0a0;padding:13px 0;font-size:13px}
 .syrex-online-foot{font-size:12px;color:#888;line-height:1.65;margin-top:20px}
 @media(max-width:620px){.syrex-online-page{padding:94px 13px 60px}.syrex-online-header{flex-wrap:wrap}.syrex-online-icon{width:49px;height:49px}.syrex-online-count{margin-left:auto}.syrex-online-setting{padding:14px 13px}.syrex-online-member{padding:13px;gap:10px}.syrex-online-avatar{height:39px;width:39px}.syrex-online-activity{font-size:10px;padding:5px 7px}.syrex-online-title{flex-basis:60%}}
+
+
+/* Syrex motion polish: scoped to the online page */
+.syrex-online-page .syrex-online-header,.syrex-online-page .syrex-online-settings,
+.syrex-online-page .syrex-online-list-heading,.syrex-online-page .syrex-online-list{
+  transform-origin:center top
+}
+.syrex-online-icon{position:relative;overflow:hidden}
+.syrex-online-icon::after{
+  content:"";position:absolute;inset:-30%;pointer-events:none;
+  background:linear-gradient(100deg,transparent 38%,rgba(255,255,255,.4) 50%,transparent 62%);
+  transform:translateX(-130%) rotate(18deg);transition:transform .75s cubic-bezier(.22,1,.36,1)
+}
+.syrex-online-header:hover .syrex-online-icon::after{transform:translateX(130%) rotate(18deg)}
+.syrex-online-settings,.syrex-online-list,.syrex-online-count{
+  transition:border-color .28s ease,box-shadow .28s ease
+}
+.syrex-online-settings:hover,.syrex-online-list:hover{border-color:#49402b;box-shadow:0 10px 35px rgba(255,207,22,.04)}
+.syrex-online-setting{transition:background-color .25s ease}
+.syrex-online-setting:hover{background:rgba(255,215,55,.025)}
+.syrex-online-switch{
+  transition:background-color .26s ease,border-color .26s ease,box-shadow .26s ease
+}
+.syrex-online-switch span{transition:transform .32s cubic-bezier(.2,.8,.2,1),background-color .22s ease}
+.syrex-online-switch:hover:not(:disabled){box-shadow:0 0 0 4px rgba(255,207,22,.09)}
+.syrex-online-switch.enabled{box-shadow:0 0 20px rgba(255,206,25,.12)}
+.syrex-online-list-heading>button{
+  transition:border-color .22s ease,background-color .22s ease,transform .24s cubic-bezier(.22,1,.36,1)
+}
+.syrex-online-list-heading>button:hover:not(:disabled){background:#292515;transform:translateY(-2px)}
+.syrex-online-list-heading>button:active:not(:disabled){transform:scale(.97)}
+.syrex-online-list-heading>button svg{transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.syrex-online-list-heading>button:hover:not(:disabled) svg{transform:rotate(70deg)}
+.syrex-online-member{transition:background-color .25s ease}
+.syrex-online-member:hover{background-color:rgba(255,211,45,.038)}
+.syrex-online-avatar,.syrex-online-activity{transition:border-color .26s ease,box-shadow .26s ease}
+.syrex-online-member:hover .syrex-online-avatar{border-color:#e4bb3d;box-shadow:0 0 22px rgba(255,202,28,.12)}
+.syrex-online-member:hover .syrex-online-activity{box-shadow:0 0 18px rgba(65,224,142,.12)}
+.syrex-online-live{animation:syrex-live-breathe 2.8s ease-in-out infinite}
+@keyframes syrex-live-breathe{
+  0%,100%{box-shadow:0 0 8px rgba(84,226,145,.4)}
+  50%{box-shadow:0 0 0 6px rgba(84,226,145,.07),0 0 15px rgba(84,226,145,.38)}
+}
+.syrex-online-page button:focus-visible{outline:2px solid #ffe16c;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  .syrex-online-page *,.syrex-online-page *::before,.syrex-online-page *::after{
+    transition-duration:0.01ms!important;animation-duration:0.01ms!important;animation-iteration-count:1!important
+  }
+  .syrex-online-live{animation:none}
+  .syrex-online-icon::after{display:none}
+}
