@@ -63,3 +63,62 @@
 .syrex-party-invite button{border:1px solid #8b711f;border-radius:8px;padding:8px 12px;font:inherit;font-size:12px;font-weight:700;color:#15120c;background:#ffda45;cursor:pointer}
 .syrex-party-invite button:last-child{background:#2c2b28;color:#ddd;border-color:#555}
 .syrex-party-invite button:disabled{opacity:.5;cursor:default}
+
+
+/* Syrex motion polish: scoped to the friends page */
+.syrex-friends-page .syrex-friends-header,.syrex-friends-page .syrex-friends-search-panel,
+.syrex-friends-page .syrex-friends-tabs,.syrex-friends-page .syrex-friends-list,
+.syrex-friends-page .syrex-party-panel,.syrex-friends-page .syrex-friends-tip{transform-origin:center top}
+.syrex-friends-search-panel,.syrex-party-panel,.syrex-friends-tip,.syrex-friends-list{
+  transition:border-color .3s ease,box-shadow .3s ease,background-color .3s ease
+}
+.syrex-friends-search-panel:hover,.syrex-party-panel:hover,.syrex-friends-tip:hover{
+  border-color:#77601f;box-shadow:0 10px 40px rgba(255,202,18,.045)
+}
+.syrex-friends-logo{position:relative;overflow:hidden}
+.syrex-friends-logo::after{
+  content:"";position:absolute;inset:-30%;pointer-events:none;
+  background:linear-gradient(100deg,transparent 37%,rgba(255,255,255,.38) 50%,transparent 63%);
+  transform:translateX(-130%) rotate(18deg);transition:transform .75s cubic-bezier(.22,1,.36,1)
+}
+.syrex-friends-header:hover .syrex-friends-logo::after{transform:translateX(130%) rotate(18deg)}
+.syrex-friends-count{transition:border-color .28s ease,box-shadow .28s ease}
+.syrex-friends-count:hover{border-color:#9a7722;box-shadow:0 0 24px #ffd02013}
+.syrex-friends-search{transition:border-color .22s ease,box-shadow .22s ease}
+.syrex-friends-search:focus-within{border-color:#f6c931;box-shadow:0 0 0 3px rgba(255,207,25,.10)}
+.syrex-friends-search-form>button,.syrex-friend-accept,.syrex-friend-remove,
+.syrex-party-invite button,.syrex-friends-refresh{
+  transition:transform .24s cubic-bezier(.22,1,.36,1),filter .24s ease,background-color .24s ease,box-shadow .24s ease,color .24s ease
+}
+.syrex-friends-search-form>button:hover:not(:disabled),.syrex-friend-accept:hover:not(:disabled){
+  transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 8px 24px #ffca1840
+}
+.syrex-friends-search-form>button:active:not(:disabled),.syrex-friend-accept:active:not(:disabled),
+.syrex-friend-remove:active:not(:disabled){transform:scale(.98)}
+.syrex-friends-tabs button{transition:color .2s ease,background-color .2s ease}
+.syrex-friends-tabs button:not(.active):hover{color:#e7d59a}
+.syrex-friends-tabs button.active{border-bottom-color:transparent}
+.syrex-friends-tab-indicator{
+  position:absolute;left:0;right:0;bottom:-3px;height:3px;z-index:1;
+  border-radius:4px 4px 0 0;background:linear-gradient(90deg,#ffe96d,#ffc400);
+  box-shadow:0 -2px 14px rgba(255,207,25,.35);pointer-events:none
+}
+.syrex-friends-refresh svg{transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.syrex-friends-refresh:hover:not(:disabled) svg{transform:rotate(70deg)}
+.syrex-friend-person{transition:background-color .22s ease}
+.syrex-friend-person:hover{background:rgba(255,206,22,.035)}
+.syrex-friend-avatar{transition:border-color .25s ease,box-shadow .25s ease}
+.syrex-friend-person:hover .syrex-friend-avatar,.syrex-friends-result:hover .syrex-friend-avatar{
+  border-color:#f4c82f;box-shadow:0 0 16px #ffd42718
+}
+.syrex-friends-result{transition:border-color .25s ease,background-color .25s ease}
+.syrex-friends-result:hover{border-color:#9c7c2b;background:#272217}
+.syrex-party-pill{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}
+.syrex-party-pill:hover{background:#3c3012;border-color:#b48a29;transform:translateY(-2px)}
+.syrex-friends-page button:focus-visible{outline:2px solid #ffe16c;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+  .syrex-friends-page *,.syrex-friends-page *::before,.syrex-friends-page *::after{
+    transition-duration:0.01ms!important;animation-duration:0.01ms!important;animation-iteration-count:1!important
+  }
+  .syrex-friends-page .syrex-friends-logo::after{display:none}
+}
