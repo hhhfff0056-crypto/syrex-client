@@ -85,7 +85,7 @@ jobs:
           echo "Applied theme-aware large and small landing circles"
       - name: Discord RPC animated GIF
         run: python3 scripts/set_discord_gif.py "$BUILD_DIR"
-      - name: Install session-only Panic module (F10)
+      - name: Install session-only Panic without hotkey
         run: python3 scripts/add_panic.py "$BUILD_DIR"
       - name: Verify Panic gates and unchanged combat code
         run: |
@@ -93,19 +93,11 @@ jobs:
           grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/client/cosmetic/CosmeticFeatureRenderer.java"
           grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/client/WindowAppearance.java"
           grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/mixin/KeyboardMixin.java"
-      - name: Add Panic without F10; disable Syrex chat commands while active
-        run: |
-          base64 -d build-assets/syrex37-panic-nof10.patch.xz.b64 | xz -d > /tmp/syrex37-panic-nof10.patch
-          cd "$BUILD_DIR"
-          git apply --check /tmp/syrex37-panic-nof10.patch
-          git apply --whitespace=nowarn /tmp/syrex37-panic-nof10.patch
-          test -f src/main/java/syrux/client/PanicMode.java
-          grep -q 'PanicMode.isActive()' src/main/java/syrux/client/command/CommandDispatcher.java
-          if grep -q 'withKeyCode(299)' src/main/java/syrux/client/module/misc/PanicModule.java; then
-            echo 'Panic incorrectly bound to F10'
-            exit 3
+          grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/client/command/CommandDispatcher.java"
+          if grep -q 'withKeyCode(299)' "$BUILD_DIR/src/main/java/syrux/client/module/misc/PanicModule.java"; then
+            echo 'Panic must not use F10'
+            exit 5
           fi
-          echo 'Panic applied; F10 free; .cfg and other Syrex commands blocked after panic.'
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
