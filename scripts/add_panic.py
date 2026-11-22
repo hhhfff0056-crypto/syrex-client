@@ -54,7 +54,11 @@ add("syrux/client/PanicMode.java", """
                     }
                 }
             }
-            hideClientScreen(MinecraftClient.getInstance());
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client != null && client.getWindow() != null) {
+                client.getWindow().setTitle("Minecraft 1.21.11");
+            }
+            hideClientScreen(client);
         }
 
         public static void hideClientScreen(MinecraftClient client) {
@@ -182,6 +186,21 @@ patch("syrux/mixin/ChatScreenMixin.java",
 patch("syrux/client/util/SoundPlayer.java",
       "   public static void method3158(String local5083_0) {\n",
       "   public static void method3158(String local5083_0) {\n      if (syrux.client.PanicMode.isActive()) return;\n")
+patch("syrux/client/cosmetic/CosmeticFeatureRenderer.java",
+      "      if (!playerEntityRenderState.spectator && (isLocal(playerEntityRenderState) || GlobalsModule.method0643().method0639())) {",
+      "      if (!syrux.client.PanicMode.isActive() && !playerEntityRenderState.spectator && (isLocal(playerEntityRenderState) || GlobalsModule.method0643().method0639())) {")
+patch("syrux/client/cosmetic/CosmeticRenderDispatcher.java",
+      "            (AfterEntities)worldRenderContext -> {\n",
+      "            (AfterEntities)worldRenderContext -> {\n               if (syrux.client.PanicMode.isActive()) return;\n")
+patch("syrux/client/WindowAppearance.java",
+      '      return "Syrex 3.7 - 1.21.11";',
+      '      return syrux.client.PanicMode.isActive() ? "Minecraft 1.21.11" : "Syrex 3.7 - 1.21.11";')
+patch("syrux/mixin/ChatInputSuggestorMixin.java",
+      "   private void suggestClientCommands(CallbackInfo callbackInfo) {\n",
+      "   private void suggestClientCommands(CallbackInfo callbackInfo) {\n      if (syrux.client.PanicMode.isActive()) return;\n")
+patch("syrux/mixin/ChatScreenMixin.java",
+      "         this.client.inGameHud.getChatHud().addToMessageHistory(local8106_1);",
+      "         if (!syrux.client.PanicMode.isActive()) this.client.inGameHud.getChatHud().addToMessageHistory(local8106_1);")
 assert combat == {str(p.relative_to(java)):sha256(p.read_bytes()).hexdigest()
                   for p in (java/"syrux/client/module/combat").glob("*.java")}
 print("Panic installed. Combat sources preserved:",len(combat))
