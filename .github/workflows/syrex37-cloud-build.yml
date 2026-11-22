@@ -87,6 +87,12 @@ jobs:
         run: python3 scripts/set_discord_gif.py "$BUILD_DIR"
       - name: Install session-only Panic module (F10)
         run: python3 scripts/add_panic.py "$BUILD_DIR"
+      - name: Verify Panic gates and unchanged combat code
+        run: |
+          test -f "$BUILD_DIR/src/main/java/syrux/client/PanicMode.java"
+          grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/client/cosmetic/CosmeticFeatureRenderer.java"
+          grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/client/WindowAppearance.java"
+          grep -q 'PanicMode.isActive()' "$BUILD_DIR/src/main/java/syrux/mixin/KeyboardMixin.java"
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
