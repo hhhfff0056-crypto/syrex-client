@@ -203,30 +203,30 @@ patch("syrux/mixin/ChatScreenMixin.java",
       "         if (!syrux.client.PanicMode.isActive()) this.client.inGameHud.getChatHud().addToMessageHistory(local8106_1);")
 # After Panic, every client command is suppressed at dispatcher level (even direct calls).
 patch("syrux/client/command/CommandDispatcher.java",
-      "   public boolean method1898(String local2973_1) {\\n",
-      "   public boolean method1898(String local2973_1) {\\n      if (syrux.client.PanicMode.isActive()) return local2973_1.startsWith(this.field06263);\\n")
+      "   public boolean method1898(String local2973_1) {\n",
+      "   public boolean method1898(String local2973_1) {\n      if (syrux.client.PanicMode.isActive()) return local2973_1.startsWith(this.field06263);\n")
 patch("syrux/client/command/CommandDispatcher.java",
-      "   public ArrayList<String> method1895(String local2969_1) {\\n",
-      "   public ArrayList<String> method1895(String local2969_1) {\\n      if (syrux.client.PanicMode.isActive()) return new ArrayList<>();\\n")
+      "   public ArrayList<String> method1895(String local2969_1) {\n",
+      "   public ArrayList<String> method1895(String local2969_1) {\n      if (syrux.client.PanicMode.isActive()) return new ArrayList<>();\n")
 patch("syrux/client/command/CommandDispatcher.java",
-      "   public ArrayList<ClientCommand> method1896(String local2971_1) {\\n",
-      "   public ArrayList<ClientCommand> method1896(String local2971_1) {\\n      if (syrux.client.PanicMode.isActive()) return new ArrayList<>();\\n")
+      "   public ArrayList<ClientCommand> method1896(String local2971_1) {\n",
+      "   public ArrayList<ClientCommand> method1896(String local2971_1) {\n      if (syrux.client.PanicMode.isActive()) return new ArrayList<>();\n")
 patch("syrux/client/command/CommandDispatcher.java",
-      "   public String method1900(String local2975_1) {\\n",
-      "   public String method1900(String local2975_1) {\\n      if (syrux.client.PanicMode.isActive()) return local2975_1;\\n")
+      "   public String method1900(String local2975_1) {\n",
+      "   public String method1900(String local2975_1) {\n      if (syrux.client.PanicMode.isActive()) return local2975_1;\n")
 # Original code adds an early return for suggestions; replace it with clearing cached UI too.
 patch("syrux/mixin/ChatInputSuggestorMixin.java",
-      "      if (syrux.client.PanicMode.isActive()) return;\\n",
-      "      if (syrux.client.PanicMode.isActive()) {\\n         this.textField.setSuggestion(null);\\n         this.messages.clear();\\n         this.clearWindow();\\n         return;\\n      }\\n")
+      "      if (syrux.client.PanicMode.isActive()) return;\n",
+      "      if (syrux.client.PanicMode.isActive()) {\n         this.textField.setSuggestion(null);\n         this.messages.clear();\n         this.clearWindow();\n         return;\n      }\n")
 patch("syrux/mixin/ChatScreenMixin.java",
       "      if (HudElementTypes.method4840(click.x(), click.y(), click.button())) {",
-      "      if (syrux.client.PanicMode.isActive()) return;\\n      if (HudElementTypes.method4840(click.x(), click.y(), click.button())) {")
+      "      if (syrux.client.PanicMode.isActive()) return;\n      if (HudElementTypes.method4840(click.x(), click.y(), click.button())) {")
 patch("syrux/mixin/ChatScreenMixin.java",
-      "   private void dragRemoved(CallbackInfo callbackInfo) {\\n",
-      "   private void dragRemoved(CallbackInfo callbackInfo) {\\n      if (syrux.client.PanicMode.isActive()) return;\\n")
+      "   private void dragRemoved(CallbackInfo callbackInfo) {\n",
+      "   private void dragRemoved(CallbackInfo callbackInfo) {\n      if (syrux.client.PanicMode.isActive()) return;\n")
 patch("syrux/mixin/ChatScreenMixin.java",
-      "   public boolean mouseReleased(Click click) {\\n",
-      "   public boolean mouseReleased(Click click) {\\n      if (syrux.client.PanicMode.isActive()) return super.mouseReleased(click);\\n")
+      "   public boolean mouseReleased(Click click) {\n",
+      "   public boolean mouseReleased(Click click) {\n      if (syrux.client.PanicMode.isActive()) return super.mouseReleased(click);\n")
 assert combat == {str(p.relative_to(java)):sha256(p.read_bytes()).hexdigest()
                   for p in (java/"syrux/client/module/combat").glob("*.java")}
 print("Panic installed. Combat sources preserved:",len(combat))
