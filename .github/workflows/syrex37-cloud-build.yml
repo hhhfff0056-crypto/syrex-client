@@ -85,6 +85,8 @@ jobs:
           echo "Applied theme-aware large and small landing circles"
       - name: Discord RPC animated GIF
         run: python3 scripts/set_discord_gif.py "$BUILD_DIR"
+      - name: Install session-only Panic module (F10)
+        run: python3 scripts/add_panic.py "$BUILD_DIR"
       - name: Compile Syrex 3.7
         working-directory: ${{ env.BUILD_DIR }}
         run: |
