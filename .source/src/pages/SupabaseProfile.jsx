@@ -22,6 +22,7 @@ const SupabaseProfile = () => {
   const [device, setDevice] = useState(null);
   const [deviceError, setDeviceError] = useState('');
   const [downloading, setDownloading] = useState('');
+  const [publishingUpdate, setPublishingUpdate] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -69,6 +70,36 @@ const SupabaseProfile = () => {
       setError(err.message);
     } finally {
       setDownloading('');
+    }
+  };
+
+  const publishUpdate = async () => {
+    if (publishingUpdate) return;
+    if (!window.confirm('Отправить всем игрокам уведомление о выходе обновления?')) return;
+    setPublishingUpdate(true);
+    setError('');
+    setNotice('');
+    try {
+      const user = await getCurrentUser();
+      if (!['DEV', 'DEVELOPER'].includes(String(user?.app_metadata?.role || '').toUpperCase())) {
+        throw new Error('Доступно только для DEV.');
+      }
+      const token = getAuthItem('authToken');
+      const base = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+      const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
+      if (!token || !base || !key) throw new Error('Сеанс недоступен. Войдите повторно.');
+      const response = await fetch(base + '/rest/v1/rpc/publish_syrex_update', {
+        method: 'POST',
+        headers: { apikey: key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: '{}',
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error('Не удалось отправить уведомление (' + response.status + ').');
+      setNotice('Уведомление об обновлении отправлено.');
+    } catch (err) {
+      setError(err.message || 'Ошибка отправки уведомления.');
+    } finally {
+      setPublishingUpdate(false);
     }
   };
 
@@ -164,6 +195,7 @@ const SupabaseProfile = () => {
                   </div>
                 </div>
                 {canManageUsers && <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Управление пользователями</button>}
+                {['DEV', 'DEVELOPER'].includes(accountRole) && <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={publishUpdate} disabled={publishingUpdate}><Sparkles size={16} /> {publishingUpdate ? 'Отправляем…' : 'Вышло обновление'}</button>}
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/cosmetics')}><Sparkles size={16} /> Моя косметика</button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/online')}><Users size={16} /> Кто сейчас в сети</button>
                 <button className="btn-trial admin-btn profile-action-btn" type="button" onClick={() => navigate('/friends')}><UserPlus size={16} /> Мои друзья</button>
